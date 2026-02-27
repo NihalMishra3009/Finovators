@@ -66,53 +66,13 @@ No manual cross-tool reconciliation.
 
 ---
 
-## Commands
-
-GigBit exposes operational commands/scripts through npm and project scripts:
-
-- `npm run api:dev`  
-  Runs backend API in development mode.
-
-- `npm run api:build`  
-  Builds backend API.
-
-- `npm run api:start`  
-  Runs built backend API.
-
-- `scripts\start-stack.cmd`  
-  Starts local stack (Docker + API bootstrap flow).
-
-- `scripts\run-android.cmd`  
-  Runs Flutter Android app with local API mapping.
-
----
-
-## Quick Start
-
-1. From project root, run `scripts\start-stack.cmd`  
-2. Open `web/frontend/landing.html` and `web/frontend/admin.html`  
-3. Run Flutter app from `app/frontend/flutter_app`  
-4. Register/login and connect platforms  
-5. Validate admin actions and app sync
-
-GigBit automatically supports:
+## GigBit automatically supports:
 
 - Multi-platform worker earnings sync  
 - Withdrawal limit + rollover logic  
 - Loan and insurance claim lifecycles  
 - Admin approvals/rejections with status propagation  
 - Cross-channel consistency (web + app)
-
----
-
-## First-Time Setup
-
-On first local setup, ensure:
-
-- Docker Desktop running  
-- Flutter SDK + Android tooling installed  
-- Node.js/npm installed  
-- Environment variables configured in `.env`
 
 ---
 
