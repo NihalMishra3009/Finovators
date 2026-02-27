@@ -4,15 +4,6 @@ GigBit is a full-stack fintech platform for gig workers that unifies payouts, pr
 
 **Journey:** Earn -> Sync -> Withdraw -> Claim -> Manage
 
-## Current Hackathon Status
-
-- Project is implemented end-to-end
-- Team size: 5
-- Contributors split:
-  - 3 members on App
-  - 2 members on Web
-- Working model: branch-based development with periodic PR updates for inspection
-
 ## Problem
 
 Gig workers and operations teams often rely on disconnected tools for core finance workflows:
