@@ -25,3 +25,6 @@ temp/
 Thumbs.db
 .vscode/
 .idea/
+
+# Release binaries
+app/releases/*.apk
