@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="gigbit-api-base" content="https://gigbit-api.onrender.com" />
+  <title>GigBit Admin Portal</title>
+  <script src="Admin.guard.js"></script>
+  <link rel="stylesheet" href="Admin.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <img src="./assets/branding/app_icon.png" alt="GigBit Logo" />
+        <span>GigBit Admin</span>
+      </div>
+      <div class="right">
+        <button class="action-icon-btn" id="langBtn" data-lang="EN" data-tip="Language" aria-label="Language">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 12H21M12 3C8.5 6.2 8.5 17.8 12 21M12 3C15.5 6.2 15.5 17.8 12 21M4.8 7.5H19.2M4.8 16.5H19.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="action-icon-btn" id="themeBtn" data-tip="Theme" aria-label="Theme">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3A6.8 6.8 0 0 0 21 12.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="menu-wrap hidden" id="notifWrap">
+          <button class="icon-menu-btn" id="notifBtn" data-tip="Notifications" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M15 18H5L7 15V10C7 7.24 9.24 5 12 5C14.76 5 17 7.24 17 10V15L19 18H15Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+              <path d="M10 19C10.45 19.62 11.18 20 12 20C12.82 20 13.55 19.62 14 19" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+            </svg>
+            <span class="menu-badge" id="notifBadge">0</span>
+          </button>
+          <div class="menu-dropdown" id="notifMenu">
+            <div class="menu-title">Notifications</div>
+            <div class="notif-filters">
+              <select id="notifDayFilter">
+                <option value="">Day</option>
+              </select>
+              <select id="notifMonthFilter">
+                <option value="">Month</option>
+              </select>
+              <select id="notifYearFilter">
+                <option value="">Year</option>
+              </select>
+            </div>
+            <div class="menu-list" id="notifList"></div>
+          </div>
+        </div>
+        <div class="menu-wrap hidden" id="profileWrap">
+          <button class="icon-menu-btn" id="profileBtn" data-tip="Profile" aria-label="Profile">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.9"/>
+              <path d="M5.5 18.5C6.6 15.9 9.1 14.2 12 14.2C14.9 14.2 17.4 15.9 18.5 18.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <div class="menu-dropdown" id="profileMenu">
+            <div class="menu-title">Profile</div>
+            <div class="profile-meta" id="profileName">Admin</div>
+            <div class="menu-list">
+              <button class="btn small" id="profileResetPwdBtn" type="button">Reset Password</button>
+              <button class="btn small danger" id="profileLogoutBtn" type="button">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="portalView">
+      <section class="panel">
+        <h2 class="section-title" id="portalTitle">Admin Operations Overview</h2>
+        <p class="lead" id="portalDesc">Monitor approvals, configure platform availability, and review financial summaries in real time.</p>
+        <div class="stats">
+          <div class="stat"><div class="muted" id="tW1">Total Withdrawn</div><div class="v" id="totWithdrawn">Rs 0</div></div>
+          <div class="stat"><div class="muted" id="tW2">Total Registered Users</div><div class="v" id="totUsers">0</div></div>
+          <div class="stat"><div class="muted" id="tW4">Active Users</div><div class="v" id="totActiveUsers">0</div></div>
+          <div class="stat"><div class="muted" id="tW3">Total Loan Amount Claimed</div><div class="v" id="totLoans">Rs 0</div></div>
+        </div>
+      </section>
+
+      <section class="grid g2" style="margin-top:12px;">
+        <div class="panel" id="loanPanel">
+          <div class="commission-head-row" style="margin-bottom:8px;">
+            <h3 class="section-title" id="loanTitle" style="margin:0;">Loan Approvals</h3>
+            <button class="expand-btn" id="toggleLoanHistoryBtn" type="button" data-tip="Show all">▼</button>
+          </div>
+          <div class="list" id="loanList"></div>
+        </div>
+        <div class="panel" id="insurancePanel">
+          <div class="commission-head-row" style="margin-bottom:8px;">
+            <h3 class="section-title" id="insTitle" style="margin:0;">Insurance Approvals</h3>
+            <button class="expand-btn" id="toggleInsuranceHistoryBtn" type="button" data-tip="Show all">▼</button>
+          </div>
+          <div class="list" id="claimList"></div>
+        </div>
+      </section>
+
+      <section class="commission-grid" style="margin-top:12px;">
+        <div class="panel">
+          <div class="commission-head-row">
+            <div class="commission-head">Transaction charge</div>
+            <select id="commissionMonth2" class="commission-month"></select>
+          </div>
+          <div class="commission-body" id="commissionTransactionCharge">Rs 0</div>
+        </div>
+        <div class="panel">
+          <div class="commission-head-row">
+            <div class="commission-head">Profit</div>
+            <select id="commissionMonth3" class="commission-month"></select>
+          </div>
+          <div class="commission-body" id="commissionProfit">Rs 0</div>
+        </div>
+      </section>
+
+      <section class="withdraw-row">
+        <div class="panel" id="withdrawHistoryPanel">
+          <div class="commission-head-row" style="margin-bottom:8px;">
+            <h3 class="section-title" id="wdTitle" style="margin:0;">Withdrawals History</h3>
+            <button class="expand-btn" id="toggleWithdrawHistoryBtn" type="button" data-tip="Show all">▼</button>
+          </div>
+          <div style="overflow:auto;">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Amount</th><th>Date</th></tr></thead>
+              <tbody id="withdrawTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel withdraw-charge-panel" id="gigHistoryPanel">
+          <div class="commission-card">
+            <div class="commission-head-row">
+              <div class="commission-head">Gig Platform</div>
+              <div class="head-controls">
+                <select id="commissionMonth1" class="commission-month"></select>
+                <button class="expand-btn" id="toggleGigHistoryBtn" type="button" data-tip="Show all">▼</button>
+              </div>
+            </div>
+            <div class="commission-body" id="commissionGigPlatform">No data</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="platform-admin-layout">
+        <div class="platform-meta-layout">
+          <div class="panel">
+            <h3 class="section-title" id="pfFormTitle">Add / Edit Platform</h3>
+            <div class="platform-form-grid">
+              <div class="stack">
+                <input id="pfName" placeholder="Platform Name" />
+                <input id="pfLogo" type="file" accept="image/*" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn primary" id="savePfBtn">Save Platform</button>
+            </div>
+            <div id="pfMsg" class="muted" style="margin-top:8px;"></div>
+          </div>
+          <div class="panel pool-card">
+            <div class="pool-split">
+              <div class="pool-label">Shared Insurance Pool</div>
+              <div class="pool-value" id="sharedPool">Rs 0</div>
+            </div>
+            <div class="pool-split">
+              <div class="pool-label">Claimed Insurance Amount</div>
+              <div class="pool-value" id="claimedPoolValue">No Claims Till Now</div>
+            </div>
+          </div>
+          <div class="panel" id="deleteReqPanel">
+            <div class="commission-head-row" style="margin-bottom:8px;">
+              <h3 class="section-title" style="font-size:18px; margin:0;">Users Requested Account Deletion</h3>
+              <button class="expand-btn" id="toggleDeleteReqHistoryBtn" type="button" data-tip="Show all">▼</button>
+            </div>
+            <div class="deletion-list" id="deleteReqList"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3 class="section-title" id="pfTitle">Integration Platforms</h3>
+          <div class="platform-grid" id="platformList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="loginOverlay" class="overlay">
+    <div class="modal">
+      <button class="close-login" id="closeLoginBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title" id="loginTitle">Admin Access</h2>
+      <div class="grid" style="margin-top:10px;">
+        <input id="adminUsername" placeholder="Admin Username" />
+        <div class="password-row">
+          <input id="adminPass" type="password" placeholder="Password" />
+          <button class="icon-btn" id="toggleAdminLoginPwd" type="button" aria-label="Show or hide password">👁</button>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="loginBtn">Login</button>
+          <button class="btn" id="forgotAdminPassBtn" type="button">Forgot Password</button>
+        </div>
+        <div id="loginErr" class="muted" style="color:#ffb4b4"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="forgotPasswordOverlay" class="overlay hidden">
+    <div class="modal">
+      <button class="close-login" id="closeForgotPwdBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title">Reset Admin Password</h2>
+      <p class="muted" style="margin:0 0 8px;">OTP will be sent to <b>gigbitaccess@gmail.com</b></p>
+      <div class="grid" style="margin-top:10px;">
+        <input id="forgotOtp" placeholder="Enter OTP" maxlength="6" />
+        <input id="forgotNewPass" type="password" placeholder="New Password (min 8 chars)" />
+        <div class="row">
+          <button class="btn primary" id="verifyForgotPwdBtn" type="button">Verify OTP & Update</button>
+          <button class="btn" id="cancelForgotPwdBtn" type="button">Cancel</button>
+        </div>
+        <div id="forgotPwdErr" class="muted" style="color:#ffb4b4"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="editPlatformOverlay" class="overlay hidden">
+    <div class="modal platform-edit-modal">
+      <button class="close-login" id="closeEditPlatformBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title">Edit Platform</h2>
+      <div class="grid" style="gap:10px;">
+        <input id="editPfName" placeholder="Platform Name" />
+        <input id="editPfLogo" type="file" accept="image/*" />
+        <div class="row">
+          <button class="btn primary" id="saveEditPfBtn">Update Platform</button>
+          <button class="btn" id="cancelEditPfBtn" type="button">Cancel</button>
+        </div>
+        <div id="editPfMsg" class="muted"></div>
+      </div>
+    </div>
+  </div>
+  <div id="profilePasswordOverlay" class="overlay hidden">
+    <div class="modal">
+      <button class="close-login" id="closeProfilePwdBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title">Reset Password</h2>
+      <p class="muted" style="margin:0 0 8px;">OTP will be sent to <b>gigbitaccess@gmail.com</b></p>
+      <div class="grid" style="margin-top:10px;">
+        <input id="profileOtp" placeholder="Enter OTP" maxlength="6" />
+        <input id="profileNewPass" type="password" placeholder="New Password (min 8 chars)" />
+        <div class="row">
+          <button class="btn primary" id="saveProfilePwdBtn" type="button">Verify OTP & Update</button>
+          <button class="btn" id="cancelProfilePwdBtn" type="button">Cancel</button>
+        </div>
+        <div id="profilePwdErr" class="muted" style="color:#ffb4b4"></div>
+      </div>
+    </div>
+  </div>
+  <div id="loanTermsOverlay" class="overlay hidden">
+    <div class="modal loan-terms-modal">
+      <button class="close-login" id="closeLoanTermsBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title" id="loanTermsTitle">Interest & Tenure</h2>
+      <div class="loan-terms-list" id="loanTermsList"></div>
+    </div>
+  </div>
+  <div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="Admin.js"></script>
+</body>
+</html>
+
+
+
+
+
+
