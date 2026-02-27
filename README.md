@@ -194,21 +194,6 @@ GigBit supports real-time or near-real-time sync patterns for:
 
 ---
 
-## Deployment
-
-Recommended free-tier setup used in this project:
-
-- Backend/API: Render  
-- Web frontend: Cloudflare Pages  
-- App distribution: APK artifact download from web
-
-Use deployment docs in repository root:
-
-- `DEPLOY_FREE.md`  
-- `DEPLOY_NOW.md`
-
----
-
 ## Project Status
 
 - App and web working in shared production-like flow  
@@ -220,7 +205,7 @@ Use deployment docs in repository root:
 
 ## Authors
 
-- GigBit Team
+- Team Finovators
 
 ---
 
