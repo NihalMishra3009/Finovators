@@ -1,0 +1,2636 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="gigbit-api-base" content="https://gigbit-api.onrender.com" />
+  <title>GigBit Admin Portal</title>
+  <script>
+    (function () {
+      try {
+        const token = (localStorage.getItem("gigbit_admin_token") || "").trim();
+        const gateTs = Number(localStorage.getItem("gigbit_admin_gate_ts") || "0");
+        const gateFresh = Number.isFinite(gateTs) && (Date.now() - gateTs) < 60 * 1000;
+        if (token) {
+          document.documentElement.classList.add("has-admin-token");
+          return;
+        }
+        if (!gateFresh) {
+          window.location.replace("landing.html");
+        }
+      } catch (_) {}
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #061536; --bg2: #0a1f44; --card: #112a57; --text: #eaf1ff; --muted: #b9c9e6;
+      --border: rgba(255,255,255,.14); --accent: #16c784; --danger: #ef4444; --warn: #f59e0b;
+      --shadow: 0 14px 34px rgba(0,0,0,.28);
+      --ui-anim-duration: 260ms; --ui-anim-ease: cubic-bezier(.22,.61,.36,1);
+    }
+    body.light {
+      --bg: #f8fafc; --bg2: #e7eefb; --card: #ffffff; --text: #0f172a; --muted: #475569;
+      --border: rgba(30,58,138,.16); --accent: #16c784; --danger: #dc2626; --warn: #d97706;
+      --shadow: 0 10px 24px rgba(15,23,42,.10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(135deg, var(--bg), var(--bg2));
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .wrap { width: min(1680px, 96vw); margin: 0 auto; padding: 16px 14px 32px; }
+    .top {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:14px;
+      padding: 4px 2px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+    .brand img {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, .20);
+    }
+    .right { display:flex; gap:8px; align-items:center; flex-wrap: wrap; justify-content: flex-end; }
+    .toggle-shell {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      padding: 5px 7px 5px 5px;
+      backdrop-filter: blur(8px);
+    }
+    .toggle-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding-left: 4px;
+      letter-spacing: .05em;
+    }
+    .toggle-btn {
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      padding: 6px 11px;
+      font-weight: 800;
+      color: var(--text);
+      background: transparent;
+    }
+    .toggle-btn.active {
+      background: linear-gradient(135deg, #16c784, #00c896);
+      color: #07251c;
+      box-shadow: 0 8px 18px rgba(22, 199, 132, .34);
+    }
+    .menu-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+    .icon-menu-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+    }
+    .action-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0;
+      position: relative;
+      line-height: 1;
+    }
+    .action-icon-btn svg {
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+    }
+    #langBtn::after {
+      content: attr(data-lang);
+      position: absolute;
+      right: -4px;
+      bottom: -4px;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(14, 26, 56, .94);
+      color: #fff;
+      font-size: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+      letter-spacing: .02em;
+    }
+    body.light #langBtn::after {
+      background: #0f172a;
+      color: #fff;
+      border-color: rgba(15,23,42,.25);
+    }
+    [data-tip] { position: relative; }
+    [data-tip]::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 8px);
+      transform: translate(-50%, -6px);
+      opacity: 0;
+      pointer-events: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 7px;
+      line-height: 1.2;
+      white-space: nowrap;
+      box-shadow: var(--shadow);
+      transition: opacity .14s ease, transform .14s ease;
+      z-index: 110;
+    }
+    [data-tip]::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 3px);
+      width: 7px;
+      height: 7px;
+      transform: translateX(-50%) rotate(45deg);
+      border-left: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+      background: var(--card);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .14s ease;
+      z-index: 109;
+    }
+    [data-tip]:hover::after,
+    [data-tip]:focus-visible::after,
+    [data-tip]:hover::before,
+    [data-tip]:focus-visible::before {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    .menu-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      border: 1px solid rgba(255,255,255,.25);
+    }
+    .menu-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      width: min(280px, 78vw);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 8px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-6px) scale(.98);
+      transform-origin: top right;
+      transition: opacity var(--ui-anim-duration) var(--ui-anim-ease), transform var(--ui-anim-duration) var(--ui-anim-ease), visibility 0s linear var(--ui-anim-duration);
+      z-index: 80;
+      max-height: min(78vh, 520px);
+      overflow: hidden;
+    }
+    .menu-dropdown.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+      transition: opacity var(--ui-anim-duration) var(--ui-anim-ease), transform var(--ui-anim-duration) var(--ui-anim-ease), visibility 0s linear 0s;
+    }
+    .menu-title {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+      margin-bottom: 6px;
+      padding: 2px 4px 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .menu-list { display: grid; gap: 5px; }
+    #notifMenu .menu-list {
+      max-height: min(64vh, 430px);
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    .notif-filters {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .notif-filters select {
+      width: 100%;
+      min-width: 0;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 7px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+    .notif-filters select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(22,199,132,.18);
+    }
+    .notif-filters select option {
+      background: var(--card);
+      color: var(--text);
+    }
+    .menu-item {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 6px 8px;
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .menu-item.empty {
+      color: var(--muted);
+      text-align: center;
+    }
+    .profile-meta {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      margin: 2px 2px 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .btn, input, select, textarea {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      padding: 8px 10px;
+      font: inherit;
+    }
+    .btn {
+      cursor:pointer;
+      font-weight: 800;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .btn.primary { background: linear-gradient(135deg, #16c784, #00c896); color: #06251b; border: 0; }
+    .btn.danger { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.45); color: #ffc9c9; }
+    .btn.warn { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.45); color: #ffe9bf; }
+    .btn.small { padding: 6px 8px; border-radius: 9px; font-size: 12px; }
+    .password-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      align-items: center;
+      width: 100%;
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+    .lead {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+      line-height: 1.45;
+    }
+    .grid { display:grid; gap: 10px; }
+    .g2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .g3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .muted { color: var(--muted); font-weight: 600; }
+    .section-title { margin:0 0 8px; font-size: 19px; font-weight: 900; }
+    .platform-meta-layout {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+    .pool-card {
+      min-height: 146px;
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 8px;
+    }
+    .pool-split {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .pool-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .pool-value {
+      margin-top: 4px;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.1;
+      color: var(--accent);
+    }
+    .deletion-list {
+      display: grid;
+      gap: 6px;
+      max-height: 172px;
+      overflow: auto;
+    }
+    .deletion-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 9px;
+      background: rgba(255,255,255,.04);
+    }
+    .deletion-meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.3;
+    }
+    .row { display:flex; gap:6px; align-items:center; flex-wrap: wrap; }
+    .hidden { display:none !important; }
+    .list { display:flex; flex-direction:column; gap: 6px; }
+    .item { border:1px solid var(--border); border-radius: 10px; padding: 8px; background: rgba(255,255,255,.04); }
+    .approval-list { display: grid; gap: 6px; overflow-x: hidden; }
+    .approval-head,
+    .approval-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.28fr) minmax(0, .76fr) minmax(0, .82fr) minmax(36px, .38fr) minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+    }
+    .approval-list-insurance .approval-head,
+    .approval-list-insurance .approval-row {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.28fr) minmax(0, .6fr) minmax(0, .95fr) minmax(36px, .38fr) minmax(0, 1fr);
+      min-width: 0;
+    }
+    .approval-head {
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .approval-row {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .approval-head > div, .approval-row > div { min-width: 0; }
+    .approval-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-start; }
+    .approval-doc { display: flex; justify-content: center; }
+    .approval-head .doc-col { text-align: center; }
+    .doc-icon-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid rgba(34,197,94,.58);
+      background: rgba(34,197,94,.22);
+      color: #d9ffe9;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .doc-icon-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(34,197,94,.16);
+      border-color: rgba(34,197,94,.45);
+    }
+    .doc-icon-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+      background: rgba(255,255,255,.04);
+      border-color: var(--border);
+      color: var(--muted);
+    }
+    .approval-email { color: var(--muted); font-weight: 600; overflow-wrap: anywhere; }
+    .pill { border-radius:999px; padding:3px 8px; font-size:11px; font-weight:800; border: 1px solid var(--border); }
+    .pill.open { color: #9ad4ff; }
+    .pill.progress { color: #ffd98a; }
+    .pill.done { color: #92f1c9; }
+    body.light .btn.danger {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+    body.light .pill.done {
+      color: #065f46;
+      border-color: #10b981;
+      background: #d1fae5;
+    }
+    body.light .pill.open {
+      color: #991b1b;
+      border-color: #ef4444;
+      background: #fee2e2;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--border); padding: 7px; text-align: left; font-size: 13px; }
+    th { color: var(--muted); font-weight: 900; font-size: 14px; }
+    #withdrawTable td { font-weight: 800; }
+    .platform-admin-layout {
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+      align-items: start;
+    }
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .platform-card {
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    }
+    .platform-head { display:flex; align-items:flex-start; justify-content:space-between; gap: 8px; }
+    .platform-main { display:flex; align-items:center; gap: 10px; min-width: 0; }
+    .logo-shell {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: none;
+    }
+    .logo {
+      width: 100%;
+      height: 100%;
+      border-radius: 14px;
+      object-fit: contain;
+      display: block;
+    }
+    .logo-fallback {
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: .03em;
+      color: rgba(255,255,255,.95);
+    }
+    body.light .logo-fallback { color: #0f172a; }
+    .platform-name { font-size: 19px; font-weight: 900; margin: 0; line-height: 1.1; }
+    .platform-slug { margin: 1px 0 4px; font-size: 12px; }
+    .platform-actions {
+      margin-top: 8px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 6px;
+    }
+    .platform-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .switch {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(239, 68, 68, .26);
+      cursor: pointer;
+      transition: background .2s ease;
+      flex: 0 0 auto;
+    }
+    .switch.active {
+      background: rgba(22, 199, 132, .35);
+      box-shadow: 0 0 0 1px rgba(22,199,132,.18) inset;
+    }
+    body.light .switch {
+      border-color: #ef4444;
+      background: #fee2e2;
+    }
+    body.light .switch.active {
+      border-color: #10b981;
+      background: #d1fae5;
+      box-shadow: 0 0 0 1px rgba(16,185,129,.22) inset;
+    }
+    body.light .switch .knob {
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(15,23,42,.22);
+    }
+    .switch .knob {
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: #fff;
+      transition: left .2s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,.22);
+    }
+    .switch.active .knob { left: 20px; }
+    .platform-form-grid {
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      align-items:start;
+      margin-top: 6px;
+    }
+    .stack { display:grid; gap: 6px; }
+    .form-actions {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .commission-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .commission-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,.04);
+      min-height: 64px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      flex-direction: column;
+      color: var(--text);
+    }
+    .commission-head {
+      font-size: 15px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+    .commission-head-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .head-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .expand-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 900;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .commission-month {
+      width: 108px;
+      min-width: 108px;
+      max-width: 108px;
+      padding: 5px 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .commission-body {
+      width: 100%;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+      display: grid;
+      gap: 3px;
+      line-height: 1.35;
+    }
+    #commissionProfit,
+    #commissionTransactionCharge {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.25;
+      color: var(--text);
+    }
+    .commission-platform-line {
+      padding: 6px 0;
+      line-height: 1.6;
+      font-size: 16px;
+      font-weight: 800;
+      border-bottom: 1px dashed var(--border);
+    }
+    .commission-platform-line:last-child { border-bottom: 0; padding-bottom: 0; }
+    .withdraw-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+      align-items: stretch;
+    }
+    .withdraw-row > .panel { height: 100%; }
+    .withdraw-charge-panel .commission-card {
+      min-height: 0;
+      margin-top: 2px;
+      height: 100%;
+    }
+    #wdTitle { font-size: 21px; }
+    .stat {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,.04);
+    }
+    .stat .v { margin-top: 3px; font-size: 24px; font-weight: 900; }
+    .platform-edit-modal { width: min(520px, 100%); }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 30;
+      background: rgba(3, 10, 28, 0.62);
+      backdrop-filter: blur(4px);
+      padding: 14px;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity var(--ui-anim-duration) var(--ui-anim-ease), visibility 0s linear 0s;
+    }
+    .overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity var(--ui-anim-duration) var(--ui-anim-ease), visibility 0s linear var(--ui-anim-duration);
+    }
+    html.has-admin-token #loginOverlay {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .modal {
+      width: min(480px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      position: relative;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transition: opacity var(--ui-anim-duration) var(--ui-anim-ease), transform var(--ui-anim-duration) var(--ui-anim-ease);
+    }
+    .overlay.hidden .modal {
+      opacity: 0;
+      transform: translateY(10px) scale(.98);
+    }
+    .close-login {
+      position: absolute;
+      right: 10px;
+      top: 8px;
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      cursor: pointer;
+      line-height: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal .section-title { margin-bottom: 8px; }
+    .blurred { filter: blur(1.2px); pointer-events: none; user-select: none; }
+    .toast-stack {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      display: grid;
+      gap: 8px;
+      width: min(320px, calc(100vw - 20px));
+      z-index: 120;
+    }
+    .toast {
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--muted);
+      border-radius: 10px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      animation: toastIn .16s ease-out;
+    }
+    .toast.success { border-left-color: var(--accent); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.warn { border-left-color: var(--warn); }
+    .toast.info { border-left-color: #7aa2ff; }
+    .toast-actions {
+      margin-top: 6px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .loan-terms-modal {
+      width: min(760px, 100%);
+      padding: 18px;
+    }
+    .loan-terms-list {
+      display: block;
+      max-height: min(62vh, 520px);
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .loan-terms-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .loan-terms-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      display: grid;
+      gap: 7px;
+      line-height: 1.45;
+    }
+    .loan-terms-item small {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .loan-terms-card-title {
+      font-size: 16px;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+    .repayment-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(90px, auto) minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .repayment-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .repayment-status-paid { color: #92f1c9; font-weight: 900; }
+    .repayment-status-pending { color: #ffd98a; font-weight: 900; }
+    .repayment-paid-at { color: var(--muted); font-size: 12px; text-align: right; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 980px) {
+      .g3, .g2, .stats, .platform-form-grid, .platform-meta-layout { grid-template-columns: 1fr; }
+      .platform-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .brand { font-size: 24px; }
+      .brand img { width: 36px; height: 36px; }
+      .withdraw-row { grid-template-columns: 1fr; }
+      .approval-head,
+      .approval-row { min-width: 0; }
+      .approval-list-insurance .approval-head,
+      .approval-list-insurance .approval-row { min-width: 0; }
+    }
+    @media (max-width: 560px) {
+      .wrap { width: 100%; padding: 10px 8px 20px; }
+      .top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .right {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 6px;
+      }
+      .toggle-shell {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .brand {
+        font-size: 21px;
+      }
+      .brand img {
+        width: 32px;
+        height: 32px;
+      }
+      .platform-grid { grid-template-columns: 1fr; }
+      .commission-head-row {
+        align-items: flex-start;
+      }
+      .head-controls {
+        width: 100%;
+        justify-content: flex-end;
+      }
+      .commission-month {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+      }
+      .approval-head {
+        display: none;
+      }
+      .approval-row,
+      .approval-list-insurance .approval-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+      .approval-doc {
+        justify-content: flex-start;
+      }
+      .approval-actions {
+        grid-column: 1 / -1;
+      }
+      .deletion-item .row[style*="flex-wrap:nowrap"] {
+        flex-wrap: wrap !important;
+      }
+      th, td {
+        font-size: 12px;
+        padding: 6px 4px;
+      }
+      .menu-dropdown {
+        right: auto;
+        left: 0;
+        width: min(96vw, 320px);
+      }
+    }
+    @media (max-width: 760px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      .commission-grid { grid-template-columns: 1fr; }
+      .panel { padding: 10px; }
+      .section-title { font-size: 18px; }
+      .approval-row,
+      .approval-list-insurance .approval-row {
+        font-size: 11px;
+      }
+      .approval-email {
+        font-size: 11px;
+      }
+      .commission-platform-line {
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .deletion-meta {
+        font-size: 10px;
+      }
+      .icon-menu-btn,
+      .action-icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+      }
+    }
+    @media (max-width: 380px) {
+      .section-title {
+        font-size: 17px;
+      }
+      .stats { grid-template-columns: 1fr; }
+      .stat .v {
+        font-size: 20px;
+      }
+      .btn.small {
+        font-size: 11px;
+        padding: 5px 7px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <img src="./assets/branding/app_icon.png" alt="GigBit Logo" />
+        <span>GigBit Admin</span>
+      </div>
+      <div class="right">
+        <button class="action-icon-btn" id="langBtn" data-lang="EN" data-tip="Language" aria-label="Language">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 12H21M12 3C8.5 6.2 8.5 17.8 12 21M12 3C15.5 6.2 15.5 17.8 12 21M4.8 7.5H19.2M4.8 16.5H19.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="action-icon-btn" id="themeBtn" data-tip="Theme" aria-label="Theme">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3A6.8 6.8 0 0 0 21 12.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="menu-wrap hidden" id="notifWrap">
+          <button class="icon-menu-btn" id="notifBtn" data-tip="Notifications" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M15 18H5L7 15V10C7 7.24 9.24 5 12 5C14.76 5 17 7.24 17 10V15L19 18H15Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+              <path d="M10 19C10.45 19.62 11.18 20 12 20C12.82 20 13.55 19.62 14 19" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+            </svg>
+            <span class="menu-badge" id="notifBadge">0</span>
+          </button>
+          <div class="menu-dropdown" id="notifMenu">
+            <div class="menu-title">Notifications</div>
+            <div class="notif-filters">
+              <select id="notifDayFilter">
+                <option value="">Day</option>
+              </select>
+              <select id="notifMonthFilter">
+                <option value="">Month</option>
+              </select>
+              <select id="notifYearFilter">
+                <option value="">Year</option>
+              </select>
+            </div>
+            <div class="menu-list" id="notifList"></div>
+          </div>
+        </div>
+        <div class="menu-wrap hidden" id="profileWrap">
+          <button class="icon-menu-btn" id="profileBtn" data-tip="Profile" aria-label="Profile">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.9"/>
+              <path d="M5.5 18.5C6.6 15.9 9.1 14.2 12 14.2C14.9 14.2 17.4 15.9 18.5 18.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <div class="menu-dropdown" id="profileMenu">
+            <div class="menu-title">Profile</div>
+            <div class="profile-meta" id="profileName">Admin</div>
+            <div class="menu-list">
+              <button class="btn small" id="profileResetPwdBtn" type="button">Reset Password</button>
+              <button class="btn small danger" id="profileLogoutBtn" type="button">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="portalView">
+      <section class="panel">
+        <h2 class="section-title" id="portalTitle">Admin Operations Overview</h2>
+        <p class="lead" id="portalDesc">Monitor approvals, configure platform availability, and review financial summaries in real time.</p>
+        <div class="stats">
+          <div class="stat"><div class="muted" id="tW1">Total Withdrawn</div><div class="v" id="totWithdrawn">Rs 0</div></div>
+          <div class="stat"><div class="muted" id="tW2">Total Registered Users</div><div class="v" id="totUsers">0</div></div>
+          <div class="stat"><div class="muted" id="tW4">Active Users</div><div class="v" id="totActiveUsers">0</div></div>
+          <div class="stat"><div class="muted" id="tW3">Total Loan Amount Claimed</div><div class="v" id="totLoans">Rs 0</div></div>
+        </div>
+      </section>
+
+      <section class="grid g2" style="margin-top:12px;">
+        <div class="panel" id="loanPanel">
+          <div class="commission-head-row" style="margin-bottom:8px;">
+            <h3 class="section-title" id="loanTitle" style="margin:0;">Loan Approvals</h3>
+            <button class="expand-btn" id="toggleLoanHistoryBtn" type="button" data-tip="Show all">▼</button>
+          </div>
+          <div class="list" id="loanList"></div>
+        </div>
+        <div class="panel" id="insurancePanel">
+          <div class="commission-head-row" style="margin-bottom:8px;">
+            <h3 class="section-title" id="insTitle" style="margin:0;">Insurance Approvals</h3>
+            <button class="expand-btn" id="toggleInsuranceHistoryBtn" type="button" data-tip="Show all">▼</button>
+          </div>
+          <div class="list" id="claimList"></div>
+        </div>
+      </section>
+
+      <section class="commission-grid" style="margin-top:12px;">
+        <div class="panel">
+          <div class="commission-head-row">
+            <div class="commission-head">Transaction charge</div>
+            <select id="commissionMonth2" class="commission-month"></select>
+          </div>
+          <div class="commission-body" id="commissionTransactionCharge">Rs 0</div>
+        </div>
+        <div class="panel">
+          <div class="commission-head-row">
+            <div class="commission-head">Profit</div>
+            <select id="commissionMonth3" class="commission-month"></select>
+          </div>
+          <div class="commission-body" id="commissionProfit">Rs 0</div>
+        </div>
+      </section>
+
+      <section class="withdraw-row">
+        <div class="panel" id="withdrawHistoryPanel">
+          <div class="commission-head-row" style="margin-bottom:8px;">
+            <h3 class="section-title" id="wdTitle" style="margin:0;">Withdrawals History</h3>
+            <button class="expand-btn" id="toggleWithdrawHistoryBtn" type="button" data-tip="Show all">▼</button>
+          </div>
+          <div style="overflow:auto;">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Amount</th><th>Date</th></tr></thead>
+              <tbody id="withdrawTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel withdraw-charge-panel" id="gigHistoryPanel">
+          <div class="commission-card">
+            <div class="commission-head-row">
+              <div class="commission-head">Gig Platform</div>
+              <div class="head-controls">
+                <select id="commissionMonth1" class="commission-month"></select>
+                <button class="expand-btn" id="toggleGigHistoryBtn" type="button" data-tip="Show all">▼</button>
+              </div>
+            </div>
+            <div class="commission-body" id="commissionGigPlatform">No data</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="platform-admin-layout">
+        <div class="platform-meta-layout">
+          <div class="panel">
+            <h3 class="section-title" id="pfFormTitle">Add / Edit Platform</h3>
+            <div class="platform-form-grid">
+              <div class="stack">
+                <input id="pfName" placeholder="Platform Name" />
+                <input id="pfLogo" type="file" accept="image/*" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn primary" id="savePfBtn">Save Platform</button>
+            </div>
+            <div id="pfMsg" class="muted" style="margin-top:8px;"></div>
+          </div>
+          <div class="panel pool-card">
+            <div class="pool-split">
+              <div class="pool-label">Shared Insurance Pool</div>
+              <div class="pool-value" id="sharedPool">Rs 0</div>
+            </div>
+            <div class="pool-split">
+              <div class="pool-label">Claimed Insurance Amount</div>
+              <div class="pool-value" id="claimedPoolValue">No Claims Till Now</div>
+            </div>
+          </div>
+          <div class="panel" id="deleteReqPanel">
+            <div class="commission-head-row" style="margin-bottom:8px;">
+              <h3 class="section-title" style="font-size:18px; margin:0;">Users Requested Account Deletion</h3>
+              <button class="expand-btn" id="toggleDeleteReqHistoryBtn" type="button" data-tip="Show all">▼</button>
+            </div>
+            <div class="deletion-list" id="deleteReqList"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3 class="section-title" id="pfTitle">Integration Platforms</h3>
+          <div class="platform-grid" id="platformList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="loginOverlay" class="overlay">
+    <div class="modal">
+      <button class="close-login" id="closeLoginBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title" id="loginTitle">Admin Access</h2>
+      <div class="grid" style="margin-top:10px;">
+        <input id="adminUsername" placeholder="Admin Username" />
+        <div class="password-row">
+          <input id="adminPass" type="password" placeholder="Password" />
+          <button class="icon-btn" id="toggleAdminLoginPwd" type="button" aria-label="Show or hide password">👁</button>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="loginBtn">Login</button>
+          <button class="btn" id="forgotAdminPassBtn" type="button">Forgot Password</button>
+        </div>
+        <div id="loginErr" class="muted" style="color:#ffb4b4"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="forgotPasswordOverlay" class="overlay hidden">
+    <div class="modal">
+      <button class="close-login" id="closeForgotPwdBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title">Reset Admin Password</h2>
+      <p class="muted" style="margin:0 0 8px;">OTP will be sent to <b>gigbitaccess@gmail.com</b></p>
+      <div class="grid" style="margin-top:10px;">
+        <input id="forgotOtp" placeholder="Enter OTP" maxlength="6" />
+        <input id="forgotNewPass" type="password" placeholder="New Password (min 8 chars)" />
+        <div class="row">
+          <button class="btn primary" id="verifyForgotPwdBtn" type="button">Verify OTP & Update</button>
+          <button class="btn" id="cancelForgotPwdBtn" type="button">Cancel</button>
+        </div>
+        <div id="forgotPwdErr" class="muted" style="color:#ffb4b4"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="editPlatformOverlay" class="overlay hidden">
+    <div class="modal platform-edit-modal">
+      <button class="close-login" id="closeEditPlatformBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title">Edit Platform</h2>
+      <div class="grid" style="gap:10px;">
+        <input id="editPfName" placeholder="Platform Name" />
+        <input id="editPfLogo" type="file" accept="image/*" />
+        <div class="row">
+          <button class="btn primary" id="saveEditPfBtn">Update Platform</button>
+          <button class="btn" id="cancelEditPfBtn" type="button">Cancel</button>
+        </div>
+        <div id="editPfMsg" class="muted"></div>
+      </div>
+    </div>
+  </div>
+  <div id="profilePasswordOverlay" class="overlay hidden">
+    <div class="modal">
+      <button class="close-login" id="closeProfilePwdBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title">Reset Password</h2>
+      <p class="muted" style="margin:0 0 8px;">OTP will be sent to <b>gigbitaccess@gmail.com</b></p>
+      <div class="grid" style="margin-top:10px;">
+        <input id="profileOtp" placeholder="Enter OTP" maxlength="6" />
+        <input id="profileNewPass" type="password" placeholder="New Password (min 8 chars)" />
+        <div class="row">
+          <button class="btn primary" id="saveProfilePwdBtn" type="button">Verify OTP & Update</button>
+          <button class="btn" id="cancelProfilePwdBtn" type="button">Cancel</button>
+        </div>
+        <div id="profilePwdErr" class="muted" style="color:#ffb4b4"></div>
+      </div>
+    </div>
+  </div>
+  <div id="loanTermsOverlay" class="overlay hidden">
+    <div class="modal loan-terms-modal">
+      <button class="close-login" id="closeLoanTermsBtn" data-tip="Close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <h2 class="section-title" id="loanTermsTitle">Interest & Tenure</h2>
+      <div class="loan-terms-list" id="loanTermsList"></div>
+    </div>
+  </div>
+  <div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    function resolveAdminApiBase() {
+      const raw = localStorage.getItem("gigbit_admin_api_base") || "";
+      const v = raw.trim();
+      if (/^https?:\/\/[^ ]+/i.test(v)) return v.replace(/\/+$/, "");
+      const fromWindow = String(window.GIGBIT_API_BASE || "").trim();
+      if (/^https?:\/\/[^ ]+/i.test(fromWindow)) return fromWindow.replace(/\/+$/, "");
+      const fromMeta = (document.querySelector('meta[name="gigbit-api-base"]')?.getAttribute("content") || "").trim();
+      if (/^https?:\/\/[^ ]+/i.test(fromMeta)) return fromMeta.replace(/\/+$/, "");
+      if (location.protocol.startsWith("http")) {
+        return `${location.protocol}//${location.hostname}:4000`;
+      }
+      return "http://127.0.0.1:4000";
+    }
+
+    const state = {
+      lang: localStorage.getItem("gigbit_web_lang") || "en",
+      theme: localStorage.getItem("gigbit_web_theme") || "dark",
+      token: localStorage.getItem("gigbit_admin_token") || "",
+      adminUsername: localStorage.getItem("gigbit_admin_username") || "Admin",
+      apiBase: resolveAdminApiBase(),
+      platforms: [],
+      editId: null,
+      newLogoData: "",
+      editLogoData: "",
+      commissionMonth: "",
+      notifications: [],
+      gigPlatformExpanded: false,
+      withdrawHistoryExpanded: false,
+      loanHistoryExpanded: false,
+      insuranceHistoryExpanded: false,
+      deleteReqHistoryExpanded: false,
+      commissionItems: [],
+      withdrawRows: [],
+      loanItems: [],
+      claimItems: [],
+      deleteReqItems: []
+    };
+    let commissionRefreshTimer = null;
+    let warmupInFlight = null;
+    let liveRefreshInFlight = false;
+    const getRequestInFlight = new Map();
+    const HISTORY_PREVIEW_COUNT = 3;
+    const DELETE_REQ_PREVIEW_COUNT = 2;
+
+    const dict = {
+      en: {
+        loginTitle: "Admin Access",
+        loginDesc: "Login with username to approve requests and manage platform controls.",
+        portalTitle: "Admin Operations Overview",
+        portalDesc: "Monitor approvals, configure platform availability, and review financial summaries in real time.",
+        loginBtn: "Login", logoutBtn: "Logout", tW1: "Total Withdrawn", tW2: "Total Registered Users", tW3: "Total Loan Amount Claimed", tW4: "Active Users",
+        loanTitle: "Loan Approvals", insTitle: "Insurance Approvals", wdTitle: "Withdrawals History",
+        pfTitle: "Integration Platforms", pfFormTitle: "Add / Edit Platform", enabledTxt: "Enabled", savePfBtn: "Save Platform",
+        resetPfBtn: "Reset", pfColorTxt: "Logo BG Color"
+      },
+      hi: {
+        loginTitle: "एडमिन एक्सेस",
+        loginDesc: "यूज़रनेम से लॉगिन करें, रिक्वेस्ट अप्रूव करें और प्लेटफॉर्म कंट्रोल मैनेज करें।",
+        portalTitle: "एडमिन ऑपरेशंस ओवरव्यू",
+        portalDesc: "अप्रूवल मॉनिटर करें, प्लेटफॉर्म उपलब्धता बदलें और फाइनेंशियल सारांश देखें।",
+        loginBtn: "लॉगिन", logoutBtn: "लॉगआउट", tW1: "कुल निकासी", tW2: "कुल पंजीकृत यूज़र्स", tW3: "दावा की गई कुल लोन राशि", tW4: "सक्रिय यूज़र्स",
+        loanTitle: "लोन अप्रूवल", insTitle: "इंश्योरेंस अप्रूवल", wdTitle: "निकासी इतिहास",
+        pfTitle: "इंटीग्रेशन प्लेटफॉर्म", pfFormTitle: "प्लेटफॉर्म जोड़ें / एडिट करें", enabledTxt: "सक्रिय", savePfBtn: "सेव करें",
+        resetPfBtn: "रीसेट", pfColorTxt: "लोगो BG रंग"
+      },
+      mr: {
+        loginTitle: "अ‍ॅडमिन ऍक्सेस",
+        loginDesc: "यूजरनेमने लॉगिन करा, रिक्वेस्ट मंजूर करा आणि प्लॅटफॉर्म कंट्रोल्स व्यवस्थापित करा।",
+        portalTitle: "अ‍ॅडमिन ऑपरेशन्स ओव्हरव्ह्यू",
+        portalDesc: "अप्रूव्हल्स मॉनिटर करा, प्लॅटफॉर्म उपलब्धता बदला आणि फायनान्शियल सारांश पहा.",
+        loginBtn: "लॉगिन", logoutBtn: "लॉगआउट", tW1: "एकूण विथड्रॉन", tW2: "एकूण नोंदणीकृत वापरकर्ते", tW3: "दावा केलेली एकूण कर्ज रक्कम", tW4: "सक्रिय वापरकर्ते",
+        loanTitle: "लोन मंजुरी", insTitle: "विमा मंजुरी", wdTitle: "विथड्रॉवल इतिहास",
+        pfTitle: "इंटिग्रेशन प्लॅटफॉर्म", pfFormTitle: "प्लॅटफॉर्म जोडा / एडिट करा", enabledTxt: "सक्रिय", savePfBtn: "सेव्ह",
+        resetPfBtn: "रीसेट", pfColorTxt: "लोगो BG रंग"
+      }
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const fmtRs = (n) => "Rs " + Number(n || 0).toFixed(0);
+    const fmtCount = (n) => Number(n || 0).toLocaleString("en-IN");
+    const fmtDateTime12 = (raw) => {
+      const d = raw ? new Date(raw) : null;
+      if (!d || Number.isNaN(d.getTime())) return "-";
+      return d.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    };
+    const fmtDateOnly = (raw) => {
+      const d = raw ? new Date(raw) : null;
+      if (!d || Number.isNaN(d.getTime())) return "-";
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = String(d.getFullYear());
+      return `${dd}/${mm}/${yyyy}`;
+    };
+    const safe = (v) => (v ?? "").toString();
+    const hasFreshAdminGate = () => {
+      const gateTs = Number(localStorage.getItem("gigbit_admin_gate_ts") || "0");
+      return Number.isFinite(gateTs) && (Date.now() - gateTs) < 60 * 1000;
+    };
+    const prettyPlatform = (value) => String(value || "")
+      .trim()
+      .split(/[-_\s]+/)
+      .filter(Boolean)
+      .map((x) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase())
+      .join(" ");
+    const prettyReasonCode = (value) => {
+      const raw = String(value || "").trim();
+      if (!raw) return "-";
+      return raw
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((x) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase())
+        .join(" ");
+    };
+    const prettyInsuranceType = (value) => {
+      const raw = String(value || "").trim().toLowerCase();
+      if (!raw) return "-";
+      if (raw === "product_damage_loss") return "Product damage/loss";
+      if (raw === "vehicle_damage") return "Vehicle damage";
+      return raw
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((x, i) => (i === 0 ? x.charAt(0).toUpperCase() + x.slice(1).toLowerCase() : x.toLowerCase()))
+        .join(" ");
+    };
+
+    function setTheme(next) {
+      state.theme = next;
+      document.body.classList.toggle("light", next === "light");
+      $("themeBtn").innerHTML = next === "light"
+        ? `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 2.8V5.2M12 18.8V21.2M21.2 12H18.8M5.2 12H2.8M18.4 5.6L16.7 7.3M7.3 16.7L5.6 18.4M18.4 18.4L16.7 16.7M7.3 7.3L5.6 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3A6.8 6.8 0 0 0 21 12.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>`;
+      $("themeBtn").setAttribute("data-tip", next === "light" ? "Light mode" : "Dark mode");
+      localStorage.setItem("gigbit_web_theme", next);
+    }
+
+    function setLang(next) {
+      state.lang = next;
+      const orderLabel = { en: "EN", hi: "हि", mr: "मर" };
+      $("langBtn").setAttribute("data-lang", orderLabel[next] || "EN");
+      $("langBtn").setAttribute("data-tip", `Language: ${orderLabel[next] || "EN"}`);
+      localStorage.setItem("gigbit_web_lang", next);
+      const d = dict[next] || dict.en;
+      Object.keys(d).forEach((k) => { const el = $(k); if (el) el.textContent = d[k]; });
+    }
+
+    function syncThemeTooltips(root = document) {
+      const nodes = (root && root.querySelectorAll) ? root.querySelectorAll("[title]") : [];
+      nodes.forEach((el) => {
+        const tip = String(el.getAttribute("title") || "").trim();
+        if (!tip) return;
+        if (!el.getAttribute("data-tip")) el.setAttribute("data-tip", tip);
+        el.removeAttribute("title");
+      });
+    }
+
+    function closeHeaderMenus() {
+      $("notifMenu")?.classList.remove("open");
+      $("profileMenu")?.classList.remove("open");
+    }
+
+    function toggleHeaderMenu(menuId) {
+      const target = $(menuId);
+      if (!target) return;
+      const willOpen = !target.classList.contains("open");
+      closeHeaderMenus();
+      if (willOpen) target.classList.add("open");
+    }
+
+    function prettyAdminAction(action, details) {
+      const a = String(action || "").trim().toLowerCase();
+      const d = details && typeof details === "object" ? details : {};
+      const platformRaw = String(d.name ?? d.slug ?? "Platform").trim();
+      const platformName = platformRaw
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((x) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase())
+        .join(" ") || "Platform";
+      if (a === "platform.toggle") return d.enabled === true ? `${platformName} Enabled` : `${platformName} Disabled`;
+      if (a === "platform.create") return `${platformName} Added`;
+      if (a === "platform.update") return `${platformName} Edited`;
+      if (a === "platform.delete") return `${platformName} Deleted`;
+      if (a === "loan.status.update") {
+        const s = String(d.status ?? "").trim();
+        return s ? `Loan ${s.charAt(0).toUpperCase()}${s.slice(1)}` : "Loan Updated";
+      }
+      if (a === "insurance_claim.status.update") {
+        const s = String(d.status ?? "").trim();
+        return s ? `Insurance ${s.charAt(0).toUpperCase()}${s.slice(1)}` : "Insurance Updated";
+      }
+      if (a === "account_deletion.approve") return "Account Deletion Approved";
+      if (a === "account_deletion.reject") return "Account Deletion Rejected";
+      if (a === "password.reset.otp" || a === "password.change") return "Password Reset";
+      return a
+        .split(/[._\s]+/)
+        .filter(Boolean)
+        .map((x) => x.charAt(0).toUpperCase() + x.slice(1))
+        .join(" ");
+    }
+
+    function renderNotifications() {
+      const items = Array.isArray(state.notifications) ? state.notifications : [];
+      const list = $("notifList");
+      const badge = $("notifBadge");
+      if (!list || !badge) return;
+      const daySel = $("notifDayFilter");
+      const monthSel = $("notifMonthFilter");
+      const yearSel = $("notifYearFilter");
+
+      const years = Array.from(new Set(items.map((x) => {
+        const d = x?.created_at ? new Date(x.created_at) : null;
+        return d && !Number.isNaN(d.getTime()) ? String(d.getFullYear()) : "";
+      }).filter(Boolean))).sort((a, b) => Number(b) - Number(a));
+
+      const months = Array.from(new Set(items.map((x) => {
+        const d = x?.created_at ? new Date(x.created_at) : null;
+        return d && !Number.isNaN(d.getTime()) ? String(d.getMonth() + 1).padStart(2, "0") : "";
+      }).filter(Boolean))).sort((a, b) => Number(a) - Number(b));
+
+      const days = Array.from(new Set(items.map((x) => {
+        const d = x?.created_at ? new Date(x.created_at) : null;
+        return d && !Number.isNaN(d.getTime()) ? String(d.getDate()).padStart(2, "0") : "";
+      }).filter(Boolean))).sort((a, b) => Number(a) - Number(b));
+
+      if (daySel) {
+        const current = String(daySel.value || "");
+        daySel.innerHTML = `<option value="">Day</option>` + days.map((d) => `<option value="${d}">${d}</option>`).join("");
+        if (days.includes(current)) daySel.value = current;
+      }
+      if (monthSel) {
+        const current = String(monthSel.value || "");
+        monthSel.innerHTML = `<option value="">Month</option>` + months.map((m) => {
+          const label = new Date(2000, Number(m) - 1, 1).toLocaleString(undefined, { month: "short" });
+          return `<option value="${m}">${label}</option>`;
+        }).join("");
+        if (months.includes(current)) monthSel.value = current;
+      }
+      if (yearSel) {
+        const current = String(yearSel.value || "");
+        yearSel.innerHTML = `<option value="">Year</option>` + years.map((y) => `<option value="${y}">${y}</option>`).join("");
+        if (years.includes(current)) yearSel.value = current;
+      }
+
+      const selDay = String(daySel?.value || "");
+      const selMonth = String(monthSel?.value || "");
+      const selYear = String(yearSel?.value || "");
+      const filtered = items.filter((x) => {
+        const d = x?.created_at ? new Date(x.created_at) : null;
+        if (!d || Number.isNaN(d.getTime())) return false;
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = String(d.getFullYear());
+        if (selDay && selDay !== day) return false;
+        if (selMonth && selMonth !== month) return false;
+        if (selYear && selYear !== year) return false;
+        return true;
+      });
+
+      const total = items.length;
+      badge.textContent = total > 99 ? "99+" : String(total);
+      badge.style.display = total > 0 ? "inline-flex" : "none";
+      list.innerHTML = filtered.length
+        ? filtered.map((x) => {
+            const actor = safe(x.actor_username || "admin");
+            const actionText = prettyAdminAction(x.action, x.details);
+            const when = fmtDateTime12(x.created_at);
+            return `<div class="menu-item"><b>${actor}</b><br>${safe(actionText)}<br>${when || "-"}</div>`;
+          }).join("")
+        : `<div class="menu-item empty">No notifications</div>`;
+    }
+
+    function syncExpandButtons() {
+      const g = $("toggleGigHistoryBtn");
+      if (g) {
+        g.textContent = state.gigPlatformExpanded ? "▲" : "▼";
+        g.setAttribute("data-tip", state.gigPlatformExpanded ? "Show less" : "Show all");
+      }
+      const w = $("toggleWithdrawHistoryBtn");
+      if (w) {
+        w.textContent = state.withdrawHistoryExpanded ? "▲" : "▼";
+        w.setAttribute("data-tip", state.withdrawHistoryExpanded ? "Show less" : "Show all");
+      }
+      const l = $("toggleLoanHistoryBtn");
+      if (l) {
+        l.textContent = state.loanHistoryExpanded ? "▲" : "▼";
+        l.setAttribute("data-tip", state.loanHistoryExpanded ? "Show less" : "Show all");
+      }
+      const i = $("toggleInsuranceHistoryBtn");
+      if (i) {
+        i.textContent = state.insuranceHistoryExpanded ? "▲" : "▼";
+        i.setAttribute("data-tip", state.insuranceHistoryExpanded ? "Show less" : "Show all");
+      }
+      const d = $("toggleDeleteReqHistoryBtn");
+      if (d) {
+        d.textContent = state.deleteReqHistoryExpanded ? "▲" : "▼";
+        d.setAttribute("data-tip", state.deleteReqHistoryExpanded ? "Show less" : "Show all");
+      }
+    }
+
+    function animateSingleSectionToggle(panelId, contentId, expandedKey, renderFn) {
+      const panel = $(panelId);
+      const content = $(contentId);
+      const prevExpanded = !!state[expandedKey];
+      const nextExpanded = !prevExpanded;
+      if (!panel) {
+        state[expandedKey] = nextExpanded;
+        renderFn();
+        return;
+      }
+      const prevHtml = content ? content.innerHTML : "";
+      const startHeight = panel.getBoundingClientRect().height;
+
+      state[expandedKey] = nextExpanded;
+      renderFn();
+      const endHeight = panel.scrollHeight;
+
+      if (prevExpanded && !nextExpanded && content) {
+        content.innerHTML = prevHtml;
+        syncExpandButtons();
+      }
+
+      panel.style.height = `${startHeight}px`;
+      panel.style.overflow = "hidden";
+      panel.style.transition = "height 260ms ease";
+      requestAnimationFrame(() => {
+        panel.style.height = `${endHeight}px`;
+      });
+      window.setTimeout(() => {
+        state[expandedKey] = nextExpanded;
+        renderFn();
+        panel.style.height = "";
+        panel.style.overflow = "";
+        panel.style.transition = "";
+      }, 280);
+    }
+
+    function animateHistoryState(nextGigExpanded, nextWithdrawExpanded) {
+      const gigPanel = $("gigHistoryPanel");
+      const withdrawPanel = $("withdrawHistoryPanel");
+      const panels = [gigPanel, withdrawPanel].filter(Boolean);
+      if (!panels.length) {
+        state.gigPlatformExpanded = nextGigExpanded;
+        state.withdrawHistoryExpanded = nextWithdrawExpanded;
+        renderCommissionGigPlatform();
+        renderWithdrawTable();
+        return;
+      }
+
+      const prevGigExpanded = state.gigPlatformExpanded;
+      const prevWithdrawExpanded = state.withdrawHistoryExpanded;
+      const gigCollapsing = prevGigExpanded && !nextGigExpanded;
+      const withdrawCollapsing = prevWithdrawExpanded && !nextWithdrawExpanded;
+      const prevGigHtml = $("commissionGigPlatform")?.innerHTML || "";
+      const prevWithdrawHtml = $("withdrawTable")?.innerHTML || "";
+
+      const startHeights = panels.map((p) => ({ p, h: p.getBoundingClientRect().height }));
+
+      state.gigPlatformExpanded = nextGigExpanded;
+      state.withdrawHistoryExpanded = nextWithdrawExpanded;
+      renderCommissionGigPlatform();
+      renderWithdrawTable();
+      const endHeights = panels.map((p) => ({ p, h: p.scrollHeight }));
+
+      // Keep collapsing panel content visible until height animation completes.
+      if (gigCollapsing && $("commissionGigPlatform")) $("commissionGigPlatform").innerHTML = prevGigHtml;
+      if (withdrawCollapsing && $("withdrawTable")) $("withdrawTable").innerHTML = prevWithdrawHtml;
+      if (gigCollapsing || withdrawCollapsing) syncExpandButtons();
+
+      startHeights.forEach(({ p, h }) => {
+        p.style.height = `${h}px`;
+        p.style.overflow = "hidden";
+        p.style.transition = "height 260ms ease";
+      });
+
+      requestAnimationFrame(() => {
+        endHeights.forEach(({ p, h }) => {
+          p.style.height = `${h}px`;
+        });
+      });
+
+      window.setTimeout(() => {
+        state.gigPlatformExpanded = nextGigExpanded;
+        state.withdrawHistoryExpanded = nextWithdrawExpanded;
+        renderCommissionGigPlatform();
+        renderWithdrawTable();
+        panels.forEach((p) => {
+          p.style.height = "";
+          p.style.overflow = "";
+          p.style.transition = "";
+        });
+      }, 280);
+    }
+
+    async function loadAdminActivityNotifications() {
+      const out = await api("/admin/activity-logs?limit=120");
+      state.notifications = Array.isArray(out.items) ? out.items : [];
+      renderNotifications();
+    }
+
+    async function api(path, opts = {}) {
+      const method = String(opts.method || "GET").toUpperCase();
+      const isPlainGet = method === "GET" && !opts.body;
+      const inflightKey = isPlainGet ? `${state.token || ""}|${path}` : "";
+      if (isPlainGet && getRequestInFlight.has(inflightKey)) {
+        return getRequestInFlight.get(inflightKey);
+      }
+
+      const requestPromise = (async () => {
+        const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+        if (state.token) headers.Authorization = "Bearer " + state.token;
+        const res = await fetch(state.apiBase + path, Object.assign({}, opts, { headers }));
+        const txt = await res.text();
+        const ctype = String(res.headers.get("content-type") || "").toLowerCase();
+        let data = {};
+        if (txt && ctype.includes("application/json")) {
+          data = JSON.parse(txt);
+        } else if (txt && txt.trim().startsWith("<!doctype")) {
+          throw new Error("API URL is incorrect or backend is not updated");
+        }
+        if (!res.ok) throw new Error((data && data.message) || "Request failed");
+        return data;
+      })();
+
+      if (isPlainGet) {
+        getRequestInFlight.set(inflightKey, requestPromise);
+        requestPromise.finally(() => getRequestInFlight.delete(inflightKey));
+      }
+
+      return requestPromise;
+    }
+
+    async function warmApi() {
+      if (warmupInFlight) return warmupInFlight;
+      warmupInFlight = fetch(`${state.apiBase}/health`, { cache: "no-store" })
+        .catch(() => {})
+        .finally(() => { warmupInFlight = null; });
+      return warmupInFlight;
+    }
+
+    function showPortal(show) {
+      document.documentElement.classList.toggle("has-admin-token", !!show);
+      $("loginOverlay").classList.toggle("hidden", show);
+      $("portalView").classList.toggle("blurred", !show);
+      $("notifWrap").classList.toggle("hidden", !show);
+      $("profileWrap").classList.toggle("hidden", !show);
+      $("profileName").textContent = state.adminUsername || "Admin";
+      if (!show) closeHeaderMenus();
+      if (!show) $("editPlatformOverlay").classList.add("hidden");
+      if (!show) $("profilePasswordOverlay").classList.add("hidden");
+      if (!show) $("loanTermsOverlay").classList.add("hidden");
+      if (!show && commissionRefreshTimer) {
+        clearInterval(commissionRefreshTimer);
+        commissionRefreshTimer = null;
+      }
+    }
+
+    function showEditPlatform(show) {
+      $("editPlatformOverlay").classList.toggle("hidden", !show);
+      if (!show) {
+        state.editId = null;
+        state.editLogoData = "";
+        $("editPfMsg").textContent = "";
+      }
+    }
+
+    function showLoanTermsPopup(show) {
+      $("loanTermsOverlay").classList.toggle("hidden", !show);
+      if (!show) {
+        $("loanTermsTitle").textContent = "Interest & Tenure";
+        $("loanTermsList").innerHTML = "";
+      }
+    }
+
+    async function openLoanTermsFromLoan(loanId) {
+      const loan = (state.loanItems || []).find((x) => safe(x?.id) === safe(loanId));
+      if (!loan) {
+        showToast("Loan not found", "error", 2200);
+        return;
+      }
+      const userName = safe(loan?.full_name || loan?.username || loan?.email || "User");
+      const userId = safe(loan?.user_id);
+      const storedRate = Number(loan?.annual_interest_rate || 0);
+      let dynamicRate = storedRate;
+      if (userId) {
+        try {
+          const eligibility = await api(`/admin/loan-eligibility/${encodeURIComponent(userId)}`);
+          dynamicRate = Number(eligibility?.annualInterestRate ?? dynamicRate);
+        } catch (_) {
+          // fallback to stored loan rate
+        }
+      }
+      const tenure = Number(loan?.tenure_months || 0);
+      const monthlyPayable = Number(loan?.monthly_installment || 0);
+      let repayments = [];
+      try {
+        const rep = await api(`/admin/loans/${encodeURIComponent(safe(loanId))}/repayments`);
+        repayments = Array.isArray(rep?.schedule) ? rep.schedule : [];
+      } catch (_) {
+        repayments = [];
+      }
+      const monthLabel = (raw) => {
+        const s = String(raw || "");
+        const m = s.match(/^(\d{4})-(\d{2})$/);
+        if (!m) return s || "-";
+        const d = new Date(Number(m[1]), Number(m[2]) - 1, 1);
+        return d.toLocaleString("en-IN", { month: "short", year: "numeric" });
+      };
+      const repaymentHtml = repayments.length
+        ? repayments.map((r) => {
+            const paid = String(r?.status || "").toLowerCase() === "paid";
+            const paidAt = paid ? fmtDateTime12(r?.paidAt) : "";
+            return `<div class="repayment-row">
+              <div>${monthLabel(r?.monthLabel)}</div>
+              <div class="${paid ? "repayment-status-paid" : "repayment-status-pending"}">${paid ? "Paid" : "Pending"}</div>
+              <div class="repayment-paid-at">${paidAt || "-"}</div>
+            </div>`;
+          }).join("")
+        : `<div class="muted">No repayment records found</div>`;
+      $("loanTermsTitle").textContent = `${userName} - Loan Details`;
+      $("loanTermsList").innerHTML = `<div class="loan-terms-grid">
+        <div class="loan-terms-item">
+          <div class="loan-terms-card-title">Loan Details</div>
+          <div>Interest Rate: ${Number.isFinite(dynamicRate) ? `${dynamicRate.toFixed(2)}%` : "-"} | Tenure: ${tenure > 0 ? `${tenure} Months` : "-"} | Payable per month: Rs ${Number(monthlyPayable || 0).toFixed(0)}</div>
+        </div>
+        <div class="loan-terms-item">
+          <div class="loan-terms-card-title">Repayment Status</div>
+          ${repaymentHtml}
+        </div>
+      </div>`;
+      showLoanTermsPopup(true);
+    }
+
+    function renderDocButton(kind, row) {
+      const id = safe(row?.id);
+      const proofUrl = safe(row?.proof_url).trim();
+      if (!id) return `<button class="doc-icon-btn" type="button" disabled aria-label="No document">📄</button>`;
+      if (!proofUrl) return `<button class="doc-icon-btn" type="button" disabled aria-label="No document">📄</button>`;
+      return `<button class="doc-icon-btn" type="button" aria-label="Download document" onclick="downloadUploadedDoc('${kind}','${id}')">📄</button>`;
+    }
+
+    function sanitizeFilePart(value) {
+      return String(value || "")
+        .trim()
+        .replace(/[^a-zA-Z0-9]+/g, "")
+        .slice(0, 60) || "user";
+    }
+
+    function detectDocExtension(proofUrl, proofName) {
+      const named = String(proofName || "").trim();
+      const fromName = named.includes(".") ? named.split(".").pop() : "";
+      if (fromName) return fromName.toLowerCase();
+      const raw = String(proofUrl || "").trim();
+      if (/^data:/i.test(raw)) {
+        const m = raw.match(/^data:([^;,]+)/i);
+        const mime = (m && m[1] ? m[1] : "").toLowerCase();
+        if (mime.includes("pdf")) return "pdf";
+        if (mime.includes("png")) return "png";
+        if (mime.includes("jpeg") || mime.includes("jpg")) return "jpg";
+        if (mime.includes("webp")) return "webp";
+      }
+      const clean = raw.split("?")[0].split("#")[0];
+      const ix = clean.lastIndexOf(".");
+      if (ix > -1 && ix < clean.length - 1) return clean.slice(ix + 1).toLowerCase();
+      return "bin";
+    }
+
+    function downloadUploadedDoc(kind, id) {
+      const list = kind === "loan" ? (state.loanItems || []) : (state.claimItems || []);
+      const row = list.find((x) => safe(x?.id) === safe(id));
+      const proofUrl = safe(row?.proof_url).trim();
+      if (!proofUrl) {
+        showToast("No uploaded document found", "error", 2400);
+        return;
+      }
+      const userName = sanitizeFilePart(row?.full_name || row?.username || (safe(row?.email).split("@")[0]) || "user");
+      const suffix = kind === "loan" ? "loan-document" : "insurance-document";
+      const ext = detectDocExtension(proofUrl, row?.proof_name);
+      const docName = `${userName}-${suffix}.${ext}`;
+      const link = document.createElement("a");
+      link.href = proofUrl;
+      link.download = docName;
+      link.target = "_blank";
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    function notifyPlatformCatalogChanged() {
+      try {
+        localStorage.setItem("gigbit_platform_catalog_version", String(Date.now()));
+      } catch (_) {
+        // ignore
+      }
+    }
+
+    function showToast(message, type = "info", timeout = 2600) {
+      const host = $("toastStack");
+      if (!host) return;
+      const node = document.createElement("div");
+      node.className = `toast ${type}`;
+      node.textContent = String(message || "");
+      host.appendChild(node);
+      const t = window.setTimeout(() => node.remove(), timeout);
+      node.addEventListener("click", () => {
+        window.clearTimeout(t);
+        node.remove();
+      });
+    }
+
+    function confirmToast(message, confirmText = "Confirm", cancelText = "Cancel") {
+      return new Promise((resolve) => {
+        const host = $("toastStack");
+        if (!host) return resolve(false);
+        const node = document.createElement("div");
+        node.className = "toast warn";
+        node.innerHTML = `
+          <div>${String(message || "")}</div>
+          <div class="toast-actions">
+            <button class="btn small">${cancelText}</button>
+            <button class="btn small danger">${confirmText}</button>
+          </div>
+        `;
+        const [cancelBtn, confirmBtn] = node.querySelectorAll("button");
+        const done = (val) => {
+          node.remove();
+          resolve(val);
+        };
+        cancelBtn.addEventListener("click", () => done(false));
+        confirmBtn.addEventListener("click", () => done(true));
+        host.appendChild(node);
+      });
+    }
+
+    function isLogoBgRemoved(value) {
+      const v = String(value ?? "").trim().toLowerCase();
+      return v === "transparent" || v === "none" || v === "rgba(0,0,0,0)" || v === "rgba(0, 0, 0, 0)";
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(String(fr.result || ""));
+        fr.onerror = () => reject(new Error("Failed to read logo file"));
+        fr.readAsDataURL(file);
+      });
+    }
+
+    async function login() {
+      $("loginErr").style.color = "#ffb4b4";
+      $("loginErr").textContent = "";
+      try {
+        warmApi().catch(() => {});
+        const out = await api("/admin/login", {
+          method: "POST",
+          body: JSON.stringify({
+            username: $("adminUsername").value.trim(),
+            password: $("adminPass").value
+          })
+        });
+        state.token = out.token || "";
+        state.adminUsername = String(out.admin?.username || $("adminUsername").value.trim() || "Admin");
+        localStorage.setItem("gigbit_admin_token", state.token);
+        localStorage.setItem("gigbit_admin_username", state.adminUsername);
+        localStorage.removeItem("gigbit_admin_gate_ts");
+        await loadAll();
+        startCommissionLiveRefresh();
+        showPortal(true);
+      } catch (e) {
+        $("loginErr").textContent = e.message;
+      }
+    }
+
+    function showForgotPassword(show) {
+      $("forgotPasswordOverlay").classList.toggle("hidden", !show);
+      if (!show) {
+        $("forgotPwdErr").textContent = "";
+        $("forgotPwdErr").style.color = "#ffb4b4";
+        $("forgotOtp").value = "";
+        $("forgotNewPass").value = "";
+      }
+    }
+
+    async function requestAdminPasswordOtp() {
+      const username = $("adminUsername").value.trim();
+      if (!username) {
+        $("loginErr").style.color = "#ffb4b4";
+        $("loginErr").textContent = "Enter admin username first";
+        return;
+      }
+      $("loginErr").textContent = "";
+      try {
+        warmApi().catch(() => {});
+        await api("/admin/password/request-otp", {
+          method: "POST",
+          body: JSON.stringify({ username })
+        });
+        $("loginErr").style.color = "#92f1c9";
+        $("loginErr").textContent = "OTP sent to gigbitaccess@gmail.com";
+        showForgotPassword(true);
+      } catch (e) {
+        $("loginErr").style.color = "#ffb4b4";
+        $("loginErr").textContent = e.message || "Failed";
+      }
+    }
+
+    async function resetAdminPasswordWithOtp() {
+      $("forgotPwdErr").style.color = "#ffb4b4";
+      $("forgotPwdErr").textContent = "";
+      try {
+        warmApi().catch(() => {});
+        await api("/admin/password/verify-otp-change", {
+          method: "POST",
+          body: JSON.stringify({
+            username: $("adminUsername").value.trim(),
+            otp: $("forgotOtp").value.trim(),
+            newPassword: $("forgotNewPass").value
+          })
+        });
+        showForgotPassword(false);
+        $("loginErr").style.color = "#92f1c9";
+        $("loginErr").textContent = "Password updated. Please login with new password.";
+        $("adminPass").value = "";
+      } catch (e) {
+        $("forgotPwdErr").style.color = "#ffb4b4";
+        $("forgotPwdErr").textContent = e.message || "Failed";
+      }
+    }
+
+    function bindPasswordToggle(buttonId, inputId) {
+      const btn = $(buttonId);
+      const input = $(inputId);
+      btn.addEventListener("click", () => {
+        const isPwd = input.type === "password";
+        input.type = isPwd ? "text" : "password";
+        btn.textContent = isPwd ? "🙈" : "👁";
+      });
+    }
+
+    function logout() {
+      state.token = "";
+      state.adminUsername = "Admin";
+      localStorage.removeItem("gigbit_admin_token");
+      localStorage.removeItem("gigbit_admin_username");
+      localStorage.removeItem("gigbit_admin_gate_ts");
+      if (commissionRefreshTimer) {
+        clearInterval(commissionRefreshTimer);
+        commissionRefreshTimer = null;
+      }
+      window.location.href = "landing.html";
+    }
+
+    function statusPill(s) {
+      const x = safe(s).toLowerCase();
+      const cls = x.includes("approve") || x.includes("resolve") || x.includes("enabled")
+        ? "done" : x.includes("progress") ? "progress" : "open";
+      const raw = safe(s || "open").trim();
+      const label = raw ? raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase() : "Open";
+      return `<span class="pill ${cls}">${label}</span>`;
+    }
+
+    async function loadLoans() {
+      const out = await api("/admin/loans");
+      const items = out.items || [];
+      state.loanItems = items;
+      const totalLoanAmount = items.reduce((sum, x) => sum + Number(x.amount || 0), 0);
+      $("totLoans").textContent = fmtRs(totalLoanAmount);
+      renderLoans();
+    }
+
+    function renderLoans() {
+      const items = Array.isArray(state.loanItems) ? state.loanItems : [];
+      const sorted = [...items].sort((a, b) => {
+        const rank = (s) => {
+          const v = String(s || "").toLowerCase();
+          if (v === "rejected") return 2;
+          if (v === "approved") return 1;
+          return 0; // pending/open first
+        };
+        return rank(a?.status) - rank(b?.status);
+      });
+      const limited = state.loanHistoryExpanded ? sorted : sorted.slice(0, HISTORY_PREVIEW_COUNT);
+      $("loanList").innerHTML = limited.length ? `
+        <div class="approval-list">
+          <div class="approval-head">
+            <div>Name</div>
+            <div>Email</div>
+            <div>Amount</div>
+            <div>Status</div>
+            <div class="doc-col">Doc</div>
+            <div>Actions</div>
+          </div>
+          ${limited.map((x) => `
+            <div class="approval-row">
+              <div><b>${safe(x.full_name || x.username || x.email || x.user_id)}</b></div>
+              <div class="approval-email">${safe(x.email)}</div>
+              <div>${fmtRs(x.amount)}</div>
+              <div>${statusPill(x.status)}</div>
+              <div class="approval-doc">${renderDocButton("loan", x)}</div>
+              <div class="approval-actions">
+                ${String(x.status || "").toLowerCase() === "approved"
+                  ? `<button class="btn small" onclick="openLoanTermsFromLoan('${safe(x.id)}')">Details</button>`
+                  : String(x.status || "").toLowerCase() === "rejected"
+                    ? `<span class="pill open">Rejected</span>`
+                    : `<button class="btn small primary" onclick="setLoanStatus('${x.id}','approved')">Approve</button>
+                       <button class="btn small danger" onclick="setLoanStatus('${x.id}','rejected')">Reject</button>`}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<div class="muted">No records</div>`;
+      syncExpandButtons();
+    }
+
+    async function loadClaims() {
+      const out = await api("/admin/insurance-claims");
+      state.claimItems = out.items || [];
+      renderClaims();
+    }
+
+    function renderClaims() {
+      const items = Array.isArray(state.claimItems) ? state.claimItems : [];
+      const sorted = [...items].sort((a, b) => {
+        const rank = (s) => {
+          const v = String(s || "").toLowerCase();
+          if (v === "rejected") return 2;
+          if (v === "approved") return 1;
+          return 0; // submitted/pending first
+        };
+        return rank(a?.status) - rank(b?.status);
+      });
+      const limited = state.insuranceHistoryExpanded ? sorted : sorted.slice(0, HISTORY_PREVIEW_COUNT);
+      $("claimList").innerHTML = limited.length ? `
+        <div class="approval-list approval-list-insurance">
+          <div class="approval-head">
+            <div>Name</div>
+            <div>Email</div>
+            <div>Amount</div>
+            <div>Type</div>
+            <div class="doc-col">Doc</div>
+            <div>Actions</div>
+          </div>
+          ${limited.map((x) => `
+            <div class="approval-row">
+              <div><b>${safe(x.full_name || x.username || x.email || x.user_id)}</b></div>
+              <div class="approval-email">${safe(x.email)}</div>
+              <div>${x.amount != null ? fmtRs(x.amount) : "-"}</div>
+              <div>${prettyInsuranceType(x.claim_type)}</div>
+              <div class="approval-doc">${renderDocButton("insurance", x)}</div>
+              <div class="approval-actions">
+                ${String(x.status || "").toLowerCase() === "approved"
+                  ? `<span class="pill done">Approved</span>`
+                  : String(x.status || "").toLowerCase() === "rejected"
+                    ? `<span class="pill open">Rejected</span>`
+                    : `<button class="btn small primary" onclick="setClaimStatus('${x.id}','approved')">Approve</button>
+                       <button class="btn small danger" onclick="setClaimStatus('${x.id}','rejected')">Reject</button>`}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<div class="muted">No records</div>`;
+      syncExpandButtons();
+    }
+
+    async function loadWithdrawals() {
+      const out = await api("/admin/withdrawals");
+      const rows = out.items || [];
+      state.withdrawRows = rows;
+      const totals = out.totals || {};
+      $("totWithdrawn").textContent = fmtRs(totals.total_withdrawn);
+      $("totUsers").textContent = fmtCount(totals.total_users);
+      $("totActiveUsers").textContent = fmtCount(totals.total_active_users);
+      $("sharedPool").textContent = fmtRs(totals.total_insurance);
+      const approvedClaims = Number(totals.approved_claims_count ?? 0);
+      const claimedAmt = Number(totals.claimed_insurance_amount ?? 0);
+      $("claimedPoolValue").textContent = approvedClaims > 0 ? fmtRs(claimedAmt) : "No Claims Till Now";
+      renderWithdrawTable();
+    }
+
+    function renderWithdrawTable() {
+      const rows = Array.isArray(state.withdrawRows) ? state.withdrawRows : [];
+      const limited = state.withdrawHistoryExpanded ? rows : rows.slice(0, HISTORY_PREVIEW_COUNT);
+      $("withdrawTable").innerHTML = limited.map((x) => `
+        <tr>
+          <td>${safe(x.full_name || x.username || x.email || x.user_id)}</td>
+          <td>${safe(x.email)}</td>
+          <td>${fmtRs(x.amount)}</td>
+          <td>${fmtDateTime12(x.created_at)}</td>
+        </tr>`).join("");
+      syncExpandButtons();
+    }
+
+    async function loadCommissionShare() {
+      const q = state.commissionMonth ? `?month=${encodeURIComponent(state.commissionMonth)}` : "";
+      const out = await api("/admin/commission-share" + q);
+      const availableMonths = Array.isArray(out.availableMonths) ? out.availableMonths.map((x) => String(x)) : [];
+      if (String(out.selectedMonth || "").trim()) state.commissionMonth = String(out.selectedMonth).trim();
+      syncCommissionMonthSelects(availableMonths, state.commissionMonth);
+      state.commissionItems = out.items || [];
+      renderCommissionGigPlatform();
+      const txCharge = Number(out.transactionChargeTotal || 0);
+      $("commissionTransactionCharge").textContent = fmtRs(txCharge);
+      $("commissionProfit").textContent = fmtRs(Number(out.profit || 0));
+    }
+
+    function renderCommissionGigPlatform() {
+      const rows = Array.isArray(state.commissionItems) ? state.commissionItems : [];
+      const limited = state.gigPlatformExpanded ? rows : rows.slice(0, HISTORY_PREVIEW_COUNT);
+      $("commissionGigPlatform").innerHTML = limited.length
+        ? limited.map((x) => `<div class="commission-platform-line">${prettyPlatform(safe(x.platform))} : ${fmtRs(x.commission)} | ${Number(x.usersCount || 0)} Users | Start Date : ${fmtDateOnly(x.startDate)}</div>`).join("")
+        : "No active plan/platform commission";
+      syncExpandButtons();
+    }
+
+    async function loadDeleteRequests() {
+      const [pending, approved, rejected] = await Promise.all([
+        api("/admin/account-deletions?status=pending"),
+        api("/admin/account-deletions?status=approved"),
+        api("/admin/account-deletions?status=rejected"),
+      ]);
+      state.deleteReqItems = [
+        ...(pending.items || []),
+        ...(approved.items || []),
+        ...(rejected.items || []),
+      ];
+      renderDeleteRequests();
+    }
+
+    function renderDeleteRequests() {
+      const items = Array.isArray(state.deleteReqItems) ? state.deleteReqItems : [];
+      const sorted = [...items].sort((a, b) => {
+        const rank = (s) => {
+          const v = String(s || "").toLowerCase();
+          if (v === "rejected") return 2;
+          if (v === "approved") return 1;
+          return 0; // pending first
+        };
+        return rank(a?.status) - rank(b?.status);
+      });
+      const limited = state.deleteReqHistoryExpanded ? sorted : sorted.slice(0, DELETE_REQ_PREVIEW_COUNT);
+      $("deleteReqList").innerHTML = limited.map((x) => `
+        <div class="deletion-item">
+          <div class="row" style="justify-content:space-between; align-items:flex-start; gap:10px;">
+            <div style="min-width:0;"><b>${safe(x.user_email || x.user_id)}</b></div>
+            <div class="deletion-meta" style="text-align:right; white-space:nowrap;">${fmtDateTime12(x.created_at)}</div>
+          </div>
+          <div class="row" style="justify-content:space-between; align-items:center; gap:10px; margin-top:6px;">
+            <div class="deletion-meta" style="min-width:0;">${prettyReasonCode(x.reason_code)}${safe(x.reason_text) ? ` • ${safe(x.reason_text)}` : ""}</div>
+            <div class="row" style="gap:6px; margin:0; flex-wrap:nowrap;">
+              ${String(x.status || "").toLowerCase() === "approved"
+                ? `<span class="pill done">Approved</span>`
+                : String(x.status || "").toLowerCase() === "rejected"
+                  ? `<span class="pill open">Rejected</span>`
+                  : `<button class="btn small primary" onclick="approveDeleteReq('${safe(x.id)}')">Approve</button>
+                     <button class="btn small danger" onclick="rejectDeleteReq('${safe(x.id)}')">Reject</button>`}
+            </div>
+          </div>
+        </div>`).join("") || `<div class="muted">No pending requests</div>`;
+      syncExpandButtons();
+    }
+
+    async function approveDeleteReq(id) {
+      const ok = await confirmToast("Approve and permanently delete this user?", "Approve", "Cancel");
+      if (!ok) return;
+      await api(`/admin/account-deletions/${id}/approve`, { method: "POST", body: "{}" });
+      showToast("Request approved", "success");
+      await loadDeleteRequests();
+    }
+
+    async function rejectDeleteReq(id) {
+      const ok = await confirmToast("Reject this deletion request?", "Reject", "Cancel");
+      if (!ok) return;
+      await api(`/admin/account-deletions/${id}/reject`, { method: "POST", body: "{}" });
+      showToast("Request rejected", "success");
+      await loadDeleteRequests();
+    }
+
+    function showProfilePassword(show) {
+      $("profilePasswordOverlay").classList.toggle("hidden", !show);
+      if (!show) {
+        $("profileOtp").value = "";
+        $("profileNewPass").value = "";
+        $("profilePwdErr").textContent = "";
+        $("profilePwdErr").style.color = "#ffb4b4";
+      }
+    }
+
+    async function requestAdminPasswordOtpFromProfile() {
+      $("profilePwdErr").style.color = "#ffb4b4";
+      $("profilePwdErr").textContent = "";
+      try {
+        const username = String(state.adminUsername || "").trim();
+        if (!username) {
+          $("profilePwdErr").textContent = "Admin username not found";
+          return false;
+        }
+        await api("/admin/password/request-otp", {
+          method: "POST",
+          body: JSON.stringify({ username }),
+        });
+        $("profilePwdErr").style.color = "#92f1c9";
+        $("profilePwdErr").textContent = "OTP sent to gigbitaccess@gmail.com";
+        return true;
+      } catch (e) {
+        $("profilePwdErr").style.color = "#ffb4b4";
+        $("profilePwdErr").textContent = e.message || "Failed to send OTP";
+        return false;
+      }
+    }
+
+    async function verifyOtpAndUpdateAdminPasswordFromProfile() {
+      $("profilePwdErr").textContent = "";
+      try {
+        const otp = $("profileOtp").value.trim();
+        const newPassword = $("profileNewPass").value;
+        const username = String(state.adminUsername || "").trim();
+        if (!username || !otp || String(newPassword).length < 8) {
+          $("profilePwdErr").style.color = "#ffb4b4";
+          $("profilePwdErr").textContent = "Enter OTP and valid new password (min 8 chars)";
+          return;
+        }
+        await api("/admin/password/verify-otp-change", {
+          method: "POST",
+          body: JSON.stringify({ username, otp, newPassword }),
+        });
+        showProfilePassword(false);
+        showToast("Password updated successfully", "success");
+      } catch (e) {
+        $("profilePwdErr").style.color = "#ffb4b4";
+        $("profilePwdErr").textContent = e.message || "Failed to update password";
+      }
+    }
+
+    function syncCommissionMonthSelects(months, selected) {
+      const ids = ["commissionMonth1", "commissionMonth2", "commissionMonth3"];
+      ids.forEach((id) => {
+        const el = $(id);
+        if (!el) return;
+        el.innerHTML = months.map((m) => `<option value="${safe(m)}">${safe(m)}</option>`).join("");
+        if (selected) el.value = selected;
+      });
+    }
+
+    async function onCommissionMonthChanged(value) {
+      const next = String(value || "").trim();
+      if (!next || next === state.commissionMonth) return;
+      state.commissionMonth = next;
+      syncCommissionMonthSelects(
+        Array.from(new Set([
+          ...Array.from($("commissionMonth1")?.options || []).map((o) => o.value),
+          ...Array.from($("commissionMonth2")?.options || []).map((o) => o.value),
+          ...Array.from($("commissionMonth3")?.options || []).map((o) => o.value),
+        ])),
+        next
+      );
+      await loadCommissionShare();
+    }
+
+    function startCommissionLiveRefresh() {
+      if (commissionRefreshTimer) clearInterval(commissionRefreshTimer);
+      commissionRefreshTimer = setInterval(() => {
+        if (document.hidden) return;
+        if (!state.token) return;
+        if (liveRefreshInFlight) return;
+        liveRefreshInFlight = true;
+        Promise.all([
+          loadCommissionShare().catch(() => {}),
+          loadAdminActivityNotifications().catch(() => {}),
+          loadWithdrawals().catch(() => {}),
+          loadDeleteRequests().catch(() => {}),
+          loadLoans().catch(() => {}),
+          loadClaims().catch(() => {}),
+        ]).finally(() => {
+          liveRefreshInFlight = false;
+        });
+      }, 6000);
+    }
+
+    function resetPlatformForm() {
+      state.newLogoData = "";
+      $("pfName").value = "";
+      $("pfLogo").value = "";
+      $("pfMsg").textContent = "";
+    }
+
+    function localPlatformLogoBySlug(slug) {
+      const s = safe(slug).toLowerCase();
+      const map = {
+        zomato: "./assets/platforms/zomato.png",
+        blinkit: "./assets/platforms/blinkit.png",
+        rapido: "./assets/platforms/rapido.png",
+        ola: "./assets/platforms/ola.png"
+      };
+      return map[s] || "";
+    }
+
+    async function loadPlatforms() {
+      const out = await api("/admin/platforms");
+      state.platforms = out.items || [];
+      $("platformList").innerHTML = state.platforms.map((p) => {
+        const name = safe(p.name);
+        const slug = safe(p.slug);
+        const logoUrl = safe(p.logo_url || "") || localPlatformLogoBySlug(slug);
+        const isOla = slug.trim().toLowerCase().includes("ola") || name.trim().toLowerCase().includes("ola");
+        const fallback = (name || slug || "P").trim().charAt(0).toUpperCase();
+        return `
+        <div class="platform-card">
+          <div class="platform-head">
+            <div class="platform-main">
+              <div class="logo-shell">
+              <img class="logo" src="${logoUrl}" alt="${name}" style="${isOla ? "background:#fff; padding:2px;" : ""}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';" />
+              <span class="logo-fallback" style="display:${logoUrl ? "none" : "inline-flex"};">${fallback}</span>
+              </div>
+              <div>
+                <div><b>${name}</b></div>
+              </div>
+            </div>
+            <div class="platform-state">
+              <button class="switch ${p.enabled ? "active" : ""}" onclick="togglePlatform('${p.id}')" data-tip="${p.enabled ? "Disable" : "Enable"}">
+                <span class="knob"></span>
+              </button>
+            </div>
+          </div>
+          <div class="row platform-actions">
+            <button class="btn small" onclick="editPlatform('${p.id}')">Edit</button>
+            <button class="btn small danger" onclick="deletePlatform('${p.id}')">Delete</button>
+          </div>
+        </div>
+      `;
+      }).join("");
+      syncThemeTooltips($("platformList"));
+    }
+
+    async function setLoanStatus(id, status) { await api(`/admin/loans/${id}/status`, { method: "POST", body: JSON.stringify({ status }) }); await loadLoans(); }
+    async function setClaimStatus(id, status) {
+      try {
+        await api(`/admin/insurance-claims/${id}/status`, { method: "POST", body: JSON.stringify({ status }) });
+        await loadClaims();
+        showToast(`Insurance ${status}`, "success");
+      } catch (e) {
+        showToast(e.message || "Unable to update insurance claim", "error");
+      }
+    }
+    async function togglePlatform(id) {
+      const p = state.platforms.find((x) => x.id === id);
+      const nextAction = p && p.enabled ? "Disable" : "Enable";
+      const ok = await confirmToast(`${nextAction} this platform?`, nextAction, "Cancel");
+      if (!ok) return;
+      await api(`/admin/platforms/${id}/toggle`, { method: "POST", body: "{}" });
+      await loadPlatforms();
+      notifyPlatformCatalogChanged();
+      showToast(`Platform ${nextAction.toLowerCase()}d`, "success");
+    }
+    async function deletePlatform(id) {
+      const ok = await confirmToast("Delete this platform?", "Delete", "Cancel");
+      if (!ok) return;
+      await api(`/admin/platforms/${id}`, { method: "DELETE" });
+      await loadPlatforms();
+      notifyPlatformCatalogChanged();
+      showToast("Platform deleted", "success");
+    }
+
+    function editPlatform(id) {
+      const p = state.platforms.find((x) => x.id === id);
+      if (!p) return;
+      state.editId = id;
+      state.editLogoData = "";
+      $("editPfName").value = p.name || "";
+      $("editPfLogo").value = "";
+      showEditPlatform(true);
+    }
+
+    async function savePlatformEditPopup() {
+      if (!state.editId) return;
+      const name = $("editPfName").value.trim();
+      if (!name) { $("editPfMsg").textContent = "Platform name is required"; return; }
+      const ok = await confirmToast("Update this platform?", "Update", "Cancel");
+      if (!ok) return;
+      const payload = {
+        name
+      };
+      const editLogoFile = $("editPfLogo").files && $("editPfLogo").files[0];
+      if (editLogoFile) payload.logoUrl = await fileToDataUrl(editLogoFile);
+      else if (state.editLogoData) payload.logoUrl = state.editLogoData;
+      await api(`/admin/platforms/${state.editId}`, { method: "PUT", body: JSON.stringify(payload) });
+      showEditPlatform(false);
+      await loadPlatforms();
+      notifyPlatformCatalogChanged();
+      showToast("Platform updated", "success");
+    }
+
+    async function savePlatform() {
+      const name = $("pfName").value.trim();
+      if (!name) { $("pfMsg").textContent = "Platform name is required"; return; }
+      const payload = {
+        name
+      };
+      const newLogoFile = $("pfLogo").files && $("pfLogo").files[0];
+      if (newLogoFile) payload.logoUrl = await fileToDataUrl(newLogoFile);
+      else if (state.newLogoData) payload.logoUrl = state.newLogoData;
+      await api("/admin/platforms", { method: "POST", body: JSON.stringify(payload) });
+      resetPlatformForm();
+      await loadPlatforms();
+      notifyPlatformCatalogChanged();
+    }
+
+    async function loadAll() {
+      await Promise.all([
+        loadLoans(),
+        loadClaims(),
+        loadWithdrawals(),
+        loadCommissionShare(),
+        loadDeleteRequests(),
+        loadPlatforms(),
+        loadAdminActivityNotifications(),
+      ]);
+    }
+
+    $("loginBtn").addEventListener("click", login);
+    $("forgotAdminPassBtn").addEventListener("click", requestAdminPasswordOtp);
+    $("verifyForgotPwdBtn").addEventListener("click", resetAdminPasswordWithOtp);
+    $("cancelForgotPwdBtn").addEventListener("click", () => showForgotPassword(false));
+    $("closeForgotPwdBtn").addEventListener("click", () => showForgotPassword(false));
+    $("closeLoginBtn").addEventListener("click", () => { window.location.href = "landing.html"; });
+    $("closeEditPlatformBtn").addEventListener("click", () => showEditPlatform(false));
+    $("closeLoanTermsBtn").addEventListener("click", () => showLoanTermsPopup(false));
+    $("cancelEditPfBtn").addEventListener("click", () => showEditPlatform(false));
+    $("notifBtn").addEventListener("click", (e) => { e.stopPropagation(); toggleHeaderMenu("notifMenu"); });
+    $("profileBtn").addEventListener("click", (e) => { e.stopPropagation(); toggleHeaderMenu("profileMenu"); });
+    $("profileLogoutBtn").addEventListener("click", () => { closeHeaderMenus(); logout(); });
+    $("profileResetPwdBtn").addEventListener("click", async () => {
+      closeHeaderMenus();
+      showProfilePassword(true);
+      await requestAdminPasswordOtpFromProfile();
+    });
+    $("saveProfilePwdBtn").addEventListener("click", verifyOtpAndUpdateAdminPasswordFromProfile);
+    $("cancelProfilePwdBtn").addEventListener("click", () => showProfilePassword(false));
+    $("closeProfilePwdBtn").addEventListener("click", () => showProfilePassword(false));
+    $("savePfBtn").addEventListener("click", savePlatform);
+    $("saveEditPfBtn").addEventListener("click", savePlatformEditPopup);
+    $("pfLogo").addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const fr = new FileReader();
+      fr.onload = () => { state.newLogoData = String(fr.result || ""); };
+      fr.readAsDataURL(f);
+    });
+    $("editPfLogo").addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const fr = new FileReader();
+      fr.onload = () => { state.editLogoData = String(fr.result || ""); };
+      fr.readAsDataURL(f);
+    });
+    $("langBtn").addEventListener("click", () => {
+      const order = ["en", "hi", "mr"];
+      setLang(order[(order.indexOf(state.lang) + 1) % order.length]);
+    });
+    $("themeBtn").addEventListener("click", () => setTheme(state.theme === "dark" ? "light" : "dark"));
+    $("commissionMonth1").addEventListener("change", (e) => onCommissionMonthChanged(e.target.value));
+    $("commissionMonth2").addEventListener("change", (e) => onCommissionMonthChanged(e.target.value));
+    $("commissionMonth3").addEventListener("change", (e) => onCommissionMonthChanged(e.target.value));
+    $("toggleGigHistoryBtn").addEventListener("click", () => {
+      const nextGig = !state.gigPlatformExpanded;
+      const nextWithdraw = nextGig ? false : state.withdrawHistoryExpanded;
+      animateHistoryState(nextGig, nextWithdraw);
+    });
+    $("toggleWithdrawHistoryBtn").addEventListener("click", () => {
+      const nextWithdraw = !state.withdrawHistoryExpanded;
+      const nextGig = nextWithdraw ? false : state.gigPlatformExpanded;
+      animateHistoryState(nextGig, nextWithdraw);
+    });
+    $("toggleLoanHistoryBtn").addEventListener("click", () => {
+      animateSingleSectionToggle("loanPanel", "loanList", "loanHistoryExpanded", renderLoans);
+    });
+    $("toggleInsuranceHistoryBtn").addEventListener("click", () => {
+      animateSingleSectionToggle("insurancePanel", "claimList", "insuranceHistoryExpanded", renderClaims);
+    });
+    $("toggleDeleteReqHistoryBtn").addEventListener("click", () => {
+      animateSingleSectionToggle("deleteReqPanel", "deleteReqList", "deleteReqHistoryExpanded", renderDeleteRequests);
+    });
+    $("notifDayFilter").addEventListener("change", renderNotifications);
+    $("notifMonthFilter").addEventListener("change", renderNotifications);
+    $("notifYearFilter").addEventListener("change", renderNotifications);
+    bindPasswordToggle("toggleAdminLoginPwd", "adminPass");
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      const inNotif = $("notifWrap")?.contains(t);
+      const inProfile = $("profileWrap")?.contains(t);
+      if (!inNotif && !inProfile) closeHeaderMenus();
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && state.token) {
+        if (liveRefreshInFlight) return;
+        liveRefreshInFlight = true;
+        Promise.all([
+          loadCommissionShare().catch(() => {}),
+          loadAdminActivityNotifications().catch(() => {}),
+          loadWithdrawals().catch(() => {}),
+          loadDeleteRequests().catch(() => {}),
+          loadLoans().catch(() => {}),
+          loadClaims().catch(() => {}),
+        ]).finally(() => {
+          liveRefreshInFlight = false;
+        });
+      }
+    });
+    $("loanTermsOverlay").addEventListener("click", (e) => {
+      if (e.target === $("loanTermsOverlay")) showLoanTermsPopup(false);
+    });
+
+    window.setLoanStatus = setLoanStatus;
+    window.setClaimStatus = setClaimStatus;
+    window.approveDeleteReq = approveDeleteReq;
+    window.rejectDeleteReq = rejectDeleteReq;
+    window.togglePlatform = togglePlatform;
+    window.deletePlatform = deletePlatform;
+    window.editPlatform = editPlatform;
+    window.downloadUploadedDoc = downloadUploadedDoc;
+    window.openLoanTermsFromLoan = openLoanTermsFromLoan;
+
+    setTheme(state.theme);
+    setLang(state.lang);
+    warmApi();
+    syncThemeTooltips(document);
+    syncExpandButtons();
+    $("adminUsername").value = "Admin1";
+    if (state.token) {
+      loadAll().then(() => {
+        startCommissionLiveRefresh();
+        showPortal(true);
+      }).catch(() => {
+        localStorage.removeItem("gigbit_admin_token");
+        state.token = "";
+        if (hasFreshAdminGate()) showPortal(false);
+        else window.location.replace("landing.html");
+      });
+    } else {
+      if (hasFreshAdminGate()) showPortal(false);
+      else window.location.replace("landing.html");
+    }
+  </script>
+</body>
+</html>
+
+

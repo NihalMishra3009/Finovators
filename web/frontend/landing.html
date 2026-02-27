@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="gigbit-api-base" content="https://gigbit-api.onrender.com" />
+  <title>GigBit - Financial Platform For Gig Workers</title>
+  <style>
+    :root {
+      --bg: #06163a;
+      --bg2: #0b1f4f;
+      --bg3: #102a63;
+      --card: rgba(20, 43, 95, 0.82);
+      --text: #eef3ff;
+      --muted: #b9c8e7;
+      --accent: #16c784;
+      --accent2: #00c896;
+      --line: rgba(255, 255, 255, 0.15);
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+    body.light {
+      --bg: #f8fafc;
+      --bg2: #eef4ff;
+      --bg3: #dde9ff;
+      --card: rgba(255, 255, 255, 0.94);
+      --text: #0f172a;
+      --muted: #475569;
+      --line: rgba(30, 58, 138, 0.14);
+      --shadow: 0 16px 30px rgba(15, 23, 42, 0.11);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+      background:
+        radial-gradient(1200px 520px at 8% -10%, #1a4aa3 0%, transparent 55%),
+        radial-gradient(900px 460px at 95% 0%, #0f377f 0%, transparent 58%),
+        linear-gradient(135deg, var(--bg), var(--bg2) 45%, var(--bg3));
+    }
+    .wrap { max-width: 1620px; margin: 0 auto; padding: 24px 24px 40px; }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+    .brand img {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, .25);
+    }
+    .right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .action-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0;
+      line-height: 1;
+      position: relative;
+    }
+    .action-icon-btn svg {
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+    }
+    #langBtn::after {
+      content: attr(data-lang);
+      position: absolute;
+      right: -4px;
+      bottom: -4px;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(14, 26, 56, .94);
+      color: #fff;
+      font-size: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+      letter-spacing: .02em;
+    }
+    body.light #langBtn::after {
+      background: #0f172a;
+      color: #fff;
+      border-color: rgba(15,23,42,.25);
+    }
+    .btn {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 800;
+      transition: transform .2s ease, filter .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+    .btn.primary {
+      border: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #05261c;
+      box-shadow: 0 14px 26px rgba(22, 199, 132, .3);
+    }
+    .glass-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+    .section-block { margin-top: 30px; }
+    .section-kicker {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .section-heading {
+      margin: 0 0 12px;
+      font-size: clamp(24px, 3.7vw, 36px);
+      font-weight: 900;
+      line-height: 1.02;
+    }
+    .section-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.65;
+      font-weight: 600;
+      max-width: 66ch;
+    }
+    #aboutD { max-width: none; }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.12fr .88fr;
+      gap: 34px;
+      padding: 16px 0 22px;
+      align-items: start;
+    }
+    .headline {
+      margin: 0;
+      font-size: clamp(40px, 6vw, 62px);
+      line-height: .94;
+      font-weight: 900;
+      letter-spacing: -.5px;
+    }
+    .sub {
+      margin: 18px 0 24px;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.5;
+      font-weight: 600;
+      max-width: 34ch;
+    }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .stat { padding: 12px 14px; min-height: 74px; }
+    .stat .k { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+    .stat .v { margin-top: 4px; font-size: 28px; font-weight: 900; }
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .detail-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .detail-card img {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      object-fit: contain;
+      border: 0;
+      background: none;
+      padding: 0;
+    }
+    .detail-card img.ola-light-bg {
+      background: #fff !important;
+      padding: 2px;
+    }
+    .detail-card b {
+      display: block;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .detail-card span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .expand-panel { display: none; }
+    .popup-trigger { cursor: pointer; }
+    .popup-hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .info-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(3, 10, 28, 0.62);
+      backdrop-filter: blur(5px);
+      z-index: 60;
+      padding: 18px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 260ms cubic-bezier(.22,.61,.36,1), visibility 0s linear 260ms;
+    }
+    .info-overlay.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 260ms cubic-bezier(.22,.61,.36,1), visibility 0s linear 0s;
+    }
+    .info-modal {
+      width: min(520px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      position: relative;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transition: opacity 260ms cubic-bezier(.22,.61,.36,1), transform 260ms cubic-bezier(.22,.61,.36,1);
+    }
+    .info-overlay:not(.show) .info-modal {
+      opacity: 0;
+      transform: translateY(10px) scale(.98);
+    }
+    .info-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: rgba(255,255,255,.08);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .info-modal h3 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      font-weight: 900;
+    }
+    .hero-right { border-left: 1px solid var(--line); padding-left: 26px; }
+    .list-title { font-size: 20px; font-weight: 900; margin: 0 0 10px; }
+    .line-item { padding: 14px; margin-bottom: 12px; }
+    .line-item b { display: block; font-size: 17px; margin-bottom: 6px; }
+    .line-item span { color: var(--muted); font-size: 14px; line-height: 1.45; font-weight: 600; }
+    .full-cta { margin-top: 14px; width: 100%; justify-content: center; }
+    .band {
+      margin-top: 24px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 24px;
+      align-items: center;
+      font-weight: 700;
+      color: var(--muted);
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(10px);
+    }
+    .band span {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.05);
+    }
+    .features {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .feature { padding: 16px; }
+    .feature h3 { margin: 0 0 8px; font-size: 20px; font-weight: 900; }
+    .feature p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; font-weight: 600; }
+    .timeline {
+      margin-top: 36px;
+      border-top: 1px solid var(--line);
+      padding-top: 20px;
+    }
+    .timeline h2 { margin: 0 0 14px; font-size: 30px; font-weight: 900; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .step { padding: 12px 14px; min-height: 142px; }
+    .step .n {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .step h4 { margin: 8px 0 8px; font-size: 19px; font-weight: 900; }
+    .step p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; font-weight: 600; }
+    .footer {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      background: linear-gradient(135deg, rgba(0,0,0,.28), rgba(22,199,132,.12));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px 16px 12px;
+      backdrop-filter: blur(10px);
+    }
+    .footer .left {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+    .footer .right {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      align-items: flex-end;
+    }
+    .footer a {
+      color: var(--text);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--line);
+    }
+    @media (max-width: 1080px) {
+      .hero { grid-template-columns: 1fr; gap: 20px; }
+      .hero-right { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; padding-top: 14px; }
+      .stats, .features, .steps { grid-template-columns: 1fr; }
+      .brand { font-size: 26px; }
+      .brand img { width: 42px; height: 42px; }
+      .sub { font-size: 16px; }
+      .footer .right { align-items: flex-start; }
+    }
+    @media (max-width: 760px) {
+      .wrap { padding: 14px 12px 24px; }
+      .nav { align-items: center; flex-direction: row; justify-content: space-between; gap: 6px; }
+      .right { width: auto; justify-content: flex-end; gap: 6px; flex-wrap: nowrap; }
+      .headline { font-size: clamp(30px, 11vw, 44px); line-height: 1.02; }
+      .sub { max-width: none; margin-top: 12px; }
+      .actions .btn { width: 100%; justify-content: center; }
+      .details-grid { grid-template-columns: 1fr; }
+      .band { gap: 8px; }
+      .band span { width: 100%; text-align: center; }
+      .timeline h2 { font-size: 24px; }
+      .step { min-height: 0; }
+    }
+    @media (max-width: 460px) {
+      .brand { font-size: 18px; gap: 6px; }
+      .brand img { width: 26px; height: 26px; border-radius: 8px; }
+      .action-icon-btn { width: 30px; height: 30px; border-radius: 8px; }
+      .right .btn {
+        padding: 7px 10px;
+        font-size: 12px;
+        border-radius: 9px;
+        white-space: nowrap;
+      }
+      .section-heading { line-height: 1.1; }
+      .section-desc { font-size: 14px; }
+      .feature h3 { font-size: 18px; }
+    }
+    @media (max-width: 380px) {
+      .brand { font-size: 16px; }
+      .brand img { width: 24px; height: 24px; }
+      .action-icon-btn { width: 28px; height: 28px; }
+      .right { gap: 4px; }
+      .right .btn {
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="nav">
+      <div class="brand">
+        <img src="./assets/branding/app_icon.png" alt="GigBit Logo" />
+        <span>GigBit</span>
+      </div>
+      <div class="right">
+        <button class="action-icon-btn" id="langBtn" data-lang="EN" aria-label="Language">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 12H21M12 3C8.5 6.2 8.5 17.8 12 21M12 3C15.5 6.2 15.5 17.8 12 21M4.8 7.5H19.2M4.8 16.5H19.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="action-icon-btn" id="themeBtn" aria-label="Theme">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3A6.8 6.8 0 0 0 21 12.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <a class="btn" href="admin.html" id="adminBtn">Admin Access</a>
+      </div>
+    </header>
+
+    <section class="section-block">
+      <p class="section-kicker" id="aboutK">About</p>
+      <h2 class="section-heading" id="aboutT">Built For India’s Gig Worker Economy</h2>
+      <p class="section-desc" id="aboutD">GigBit combines earnings tracking, benefits, support, and tax readiness into one worker-first platform. The app is designed to reduce financial stress and make daily operations clear, fast, and reliable.</p>
+    </section>
+
+    <section class="section-block">
+      <p class="section-kicker" id="everythingK">Everything Workers Need In One Place</p>
+    </section>
+
+    <section class="hero">
+      <div>
+        <h1 class="headline" id="title">Financial Platform<br>For Gig Workers</h1>
+        <p class="sub" id="lead">Track earnings, trips, expenses, withdrawals, plans, and tax-ready summaries in one secure ecosystem.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/GigBitVerify/GigBit/raw/main/app/releases/GigBit.apk" download="GigBit.apk" id="apkBtn">Download APK</a>
+        </div>
+        <div class="stats">
+          <div class="stat glass-card popup-trigger" data-popup-title="Active Platform Integrations">
+            <div class="k" id="s1">Active Platform Integrations</div>
+            <div class="v" id="s1v">6</div>
+            <div class="popup-hint" id="viewDetails1">View Details</div>
+            <div class="expand-panel">
+              <div class="details-grid" id="platformDetailsGrid">
+                <div class="detail-card"><img src="./assets/platforms/zomato.png" alt="Zomato" /><div><b id="p1">Zomato</b><span>Platform</span></div></div>
+                <div class="detail-card"><img src="./assets/platforms/blinkit.png" alt="Blinkit" /><div><b id="p3">Blinkit</b><span>Platform</span></div></div>
+                <div class="detail-card"><img src="./assets/platforms/rapido.png" alt="Rapido" /><div><b id="p4">Rapido</b><span>Platform</span></div></div>
+                <div class="detail-card"><img class="ola-light-bg" src="./assets/platforms/ola.png" alt="Ola" /><div><b id="p6">Ola</b><span>Platform</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat glass-card popup-trigger" data-popup-title="Subscription Tiers">
+            <div class="k" id="s2">Subscription Tiers</div>
+            <div class="v">3</div>
+            <div class="popup-hint" id="viewDetails2">View Details</div>
+            <div class="expand-panel">
+              <div class="details-grid">
+                <div class="detail-card"><div><b id="plan1">Solo</b><span id="plan1d">Rs 299 / Month • Up To 1 Platform</span></div></div>
+                <div class="detail-card"><div><b id="plan2">Duo</b><span id="plan2d">Rs 399 / Month • Up To 2 Platforms</span></div></div>
+                <div class="detail-card"><div><b id="plan3">Trio</b><span id="plan3d">Rs 499 / Month • Up To 3 Platforms</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="stat glass-card"><div class="k" id="s3">Built For</div><div class="v" id="s3v">Workers</div></div>
+        </div>
+      </div>
+      <aside class="hero-right">
+        <h2 class="list-title" id="rTitle">Everything Workers Need In One Place</h2>
+        <div class="line-item glass-card"><b id="r1t">Platform Integrations</b><span id="r1d">Connect Zomato, Blinkit, Rapido, and Ola with one flow.</span></div>
+        <div class="line-item glass-card"><b id="r2t">Smart Expense + Tax</b><span id="r2d">Daily fuel/rent tracking plus tax-ready summaries for fast filing.</span></div>
+        <div class="line-item glass-card"><b id="r3t">Plans, Insurance, Withdrawals</b><span id="r3d">Manage limits, benefits, support tickets, and withdrawal history.</span></div>
+      </aside>
+    </section>
+
+    <div class="band">
+      <span id="b1">Real Time Platform Sync</span>
+      <span id="b2">Unified Expense Tracker</span>
+      <span id="b3">Tax Assistant + ITR Summary</span>
+      <span id="b4">Admin Controlled Integrations</span>
+    </div>
+
+    <section class="section-block">
+      <p class="section-kicker" id="featuresK">Features</p>
+      <h2 class="section-heading" id="featuresT">Detailed Worker Features</h2>
+    </section>
+
+    <section class="features">
+      <div class="feature glass-card">
+        <h3 id="f1t">Loan Benefits</h3>
+        <p id="f1d">Eligible users can apply for loans in-app, track approval stages, and see clear repayment context.</p>
+      </div>
+      <div class="feature glass-card">
+        <h3 id="f2t">GigBit Insurance</h3>
+        <p id="f2d">Opt-in insurance support with monthly contribution logic and admin claim approvals.</p>
+      </div>
+      <div class="feature glass-card">
+        <h3 id="f3t">Instant Withdrawals</h3>
+        <p id="f3d">Withdrawable balance is shown clearly with transaction history and admin withdrawal tracking.</p>
+      </div>
+      <div class="feature glass-card">
+        <h3 id="f4t">Tax Chatbot Assistance</h3>
+        <p id="f4d">Tax assistant supports queries about platform earnings, tax basics, and ITR-ready summaries.</p>
+      </div>
+      <div class="feature glass-card">
+        <h3 id="f5t">Help And Support</h3>
+        <p id="f5d">Raise tickets, check status updates, and access support channels from within the app.</p>
+      </div>
+      <div class="feature glass-card">
+        <h3 id="f6t">Smart Subscription Plans</h3>
+        <p id="f6d">Solo, Duo, and Trio plans control platform integration limits with clear expiry tracking.</p>
+      </div>
+    </section>
+
+    <section class="timeline">
+      <p class="section-kicker" id="howK">How GigBit Works</p>
+      <h2 id="wTitle">How GigBit Works</h2>
+      <div class="steps">
+        <article class="step glass-card">
+          <div class="n">Step 01</div>
+          <h4 id="w1t">Download And Register</h4>
+          <p id="w1d">Install the Android app, verify your email, and create your worker profile.</p>
+        </article>
+        <article class="step glass-card">
+          <div class="n">Step 02</div>
+          <h4 id="w2t">Purchases Subscription Plans</h4>
+          <p id="w2d">Purchase Solo, Duo, or Trio subscription plan, then connect platform.</p>
+        </article>
+        <article class="step glass-card">
+          <div class="n">Step 03</div>
+          <h4 id="w3t">Sync Trips And Earnings</h4>
+          <p id="w3d">Track platform earnings, completed trips, and real expenses in one dashboard.</p>
+        </article>
+        <article class="step glass-card">
+          <div class="n">Step 04</div>
+          <h4 id="w4t">Withdraw And File Tax</h4>
+          <p id="w4d">Withdraw balance, use support features, and generate ITR-ready summaries.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="left" id="copyrightTxt">Copyright © 2026 GigBit Technologies. All Rights Reserved.</div>
+      <div class="right">
+        <div id="contactTitle">Contact</div>
+        <div><a href="mailto:support@gigbit.app" id="contactEmail">support@gigbit.app</a></div>
+        <div id="contactPhone">Helpline: +91 90000 00000</div>
+        <div id="contactWhatsApp">WhatsApp: +91 90000 00000</div>
+      </div>
+    </footer>
+  </div>
+  <div class="info-overlay" id="infoOverlay">
+    <div class="info-modal">
+      <button class="info-close" id="infoClose" aria-label="Close">x</button>
+      <h3 id="infoTitle">Details</h3>
+      <div id="infoBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const dict = {
+      en: {
+        aboutK: "About",
+        aboutT: "Built For India’s Gig Worker Economy",
+        aboutD: "GigBit combines earnings tracking, benefits, support, and tax readiness into one worker-first platform. The app is designed to reduce financial stress and make daily operations clear, fast, and reliable.",
+        everythingK: "Everything Workers Need In One Place",
+        title: "Financial Platform<br>For Gig Workers",
+        lead: "Track earnings, trips, expenses, withdrawals, plans, and tax-ready summaries in one secure ecosystem.",
+        adminBtn: "Admin Access",
+        apkBtn: "Download APK",
+        apkBtnAlt: "Download For iOS",
+        apkBtn2: "Get Latest Android APK",
+        s1: "Active Platform Integrations",
+        s2: "Subscription Tiers",
+        s3: "Built For",
+        s3v: "Workers",
+        p1: "Zomato",
+        p3: "Blinkit",
+        p4: "Rapido",
+        p6: "Ola",
+        plan1: "Solo",
+        plan2: "Duo",
+        plan3: "Trio",
+        plan1d: "Rs 299 / Month • Up To 1 Platform",
+        plan2d: "Rs 399 / Month • Up To 2 Platforms",
+        plan3d: "Rs 499 / Month • Up To 3 Platforms",
+        viewDetails1: "View Details",
+        viewDetails2: "View Details",
+        rTitle: "Everything Workers Need In One Place",
+        r1t: "Platform Integrations",
+        r1d: "Connect Zomato, Blinkit, Rapido, and Ola with one flow.",
+        r2t: "Smart Expense + Tax",
+        r2d: "Daily fuel/rent tracking plus tax-ready summaries for fast filing.",
+        r3t: "Plans, Insurance, Withdrawals",
+        r3d: "Manage limits, benefits, support tickets, and withdrawal history.",
+        b1: "Real Time Platform Sync",
+        b2: "Unified Expense Tracker",
+        b3: "Tax Assistant + ITR Summary",
+        b4: "Admin Controlled Integrations",
+        featuresK: "Features",
+        featuresT: "Detailed Worker Features",
+        f1t: "Loan Benefits",
+        f1d: "Eligible users can apply for loans in-app, track approval stages, and see clear repayment context.",
+        f2t: "GigBit Insurance",
+        f2d: "Opt-in insurance support with monthly contribution logic and admin claim approvals.",
+        f3t: "Instant Withdrawals",
+        f3d: "Withdrawable balance is shown clearly with transaction history and admin withdrawal tracking.",
+        f4t: "Tax Chatbot Assistance",
+        f4d: "Tax assistant supports queries about platform earnings, tax basics, and ITR-ready summaries.",
+        f5t: "Help And Support",
+        f5d: "Raise tickets, check status updates, and access support channels from within the app.",
+        f6t: "Smart Subscription Plans",
+        f6d: "Solo, Duo, and Trio plans control platform integration limits with clear expiry tracking.",
+        howK: "How GigBit Works",
+        wTitle: "How GigBit Works",
+        w1t: "Download And Register",
+        w1d: "Install the Android app, verify your email, and create your worker profile.",
+        w2t: "Purchases Subscription Plans",
+        w2d: "Purchase Solo, Duo, or Trio subscription plan, then connect platform.",
+        w3t: "Sync Trips And Earnings",
+        w3d: "Track platform earnings, completed trips, and real expenses in one dashboard.",
+        w4t: "Withdraw And File Tax",
+        w4d: "Withdraw balance, use support features, and generate ITR-ready summaries.",
+        copyrightTxt: "Copyright © 2026 GigBit Technologies. All Rights Reserved.",
+        contactTitle: "Contact",
+        contactEmail: "support@gigbit.app",
+        contactPhone: "Helpline: +91 90000 00000",
+        contactWhatsApp: "WhatsApp: +91 90000 00000"
+      },
+      hi: {},
+      mr: {}
+    };
+
+    dict.hi = { ...dict.en, adminBtn: "एडमिन एक्सेस", apkBtn: "APK डाउनलोड", apkBtnAlt: "iOS के लिए डाउनलोड", apkBtn2: "नवीनतम Android APK", contactTitle: "संपर्क" };
+    dict.mr = { ...dict.en, adminBtn: "अ‍ॅडमिन ऍक्सेस", apkBtn: "APK डाउनलोड", apkBtnAlt: "iOS साठी डाउनलोड", apkBtn2: "लेटेस्ट Android APK", contactTitle: "संपर्क" };
+
+    const langBtn = document.getElementById("langBtn");
+    const themeBtn = document.getElementById("themeBtn");
+    const adminBtn = document.getElementById("adminBtn");
+    const infoOverlay = document.getElementById("infoOverlay");
+    const infoTitle = document.getElementById("infoTitle");
+    const infoBody = document.getElementById("infoBody");
+    const infoClose = document.getElementById("infoClose");
+    let lang = localStorage.getItem("gigbit_web_lang") || "en";
+    let theme = localStorage.getItem("gigbit_web_theme") || "dark";
+    let platformCatalogTimer = null;
+    let platformCatalogSource = null;
+
+    function resolveApiBase() {
+      const fromAdmin = (localStorage.getItem("gigbit_admin_api_base") || "").trim();
+      if (/^https?:\/\/[^ ]+/i.test(fromAdmin)) return fromAdmin.replace(/\/+$/, "");
+      const fromWindow = String(window.GIGBIT_API_BASE || "").trim();
+      if (/^https?:\/\/[^ ]+/i.test(fromWindow)) return fromWindow.replace(/\/+$/, "");
+      const fromMeta = (document.querySelector('meta[name="gigbit-api-base"]')?.getAttribute("content") || "").trim();
+      if (/^https?:\/\/[^ ]+/i.test(fromMeta)) return fromMeta.replace(/\/+$/, "");
+      if (location.protocol.startsWith("http")) {
+        return `${location.protocol}//${location.hostname}:4000`;
+      }
+      return "http://127.0.0.1:4000";
+    }
+
+    async function hasValidAdminSession() {
+      const token = (localStorage.getItem("gigbit_admin_token") || "").trim();
+      if (!token) return false;
+      try {
+        const res = await fetch(`${resolveApiBase()}/admin/activity-logs?limit=1`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        if (res.ok) return true;
+      } catch (_) {}
+      return false;
+    }
+
+    function fallbackLogoBySlug(slug) {
+      const key = String(slug || "").toLowerCase();
+      const map = {
+        zomato: "./assets/platforms/zomato.png",
+        blinkit: "./assets/platforms/blinkit.png",
+        rapido: "./assets/platforms/rapido.png",
+        ola: "./assets/platforms/ola.png"
+      };
+      return map[key] || "";
+    }
+
+    async function refreshPlatformCatalog() {
+      const apiBase = resolveApiBase();
+      try {
+        const res = await fetch(`${apiBase}/platforms/catalog`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        const s1v = document.getElementById("s1v");
+        if (s1v) s1v.textContent = String(items.length);
+
+        const detailsGrid = document.getElementById("platformDetailsGrid");
+        if (detailsGrid) {
+          detailsGrid.innerHTML = items.map((item) => {
+            const slug = String(item.slug || "").toLowerCase();
+            const name = String(item.name || slug || "Platform");
+            const logo = String(item.logo_url || "").trim() || fallbackLogoBySlug(slug);
+            const lowerName = name.trim().toLowerCase();
+            const needsLightBg = slug === "ola" || lowerName.includes("ola");
+            const escapedName = name.replace(/</g, "&lt;");
+            const escapedLogo = logo.replace(/"/g, "&quot;");
+            return `<div class="detail-card">
+              <img class="${needsLightBg ? "ola-light-bg" : ""}" src="${escapedLogo}" alt="${escapedName}" onerror="this.style.display='none'" />
+              <div><b>${escapedName}</b><span>Platform</span></div>
+            </div>`;
+          }).join("") || `<div class="detail-card"><div><b>No Active Platform</b><span>Platform</span></div></div>`;
+        }
+
+        const r1d = document.getElementById("r1d");
+        if (r1d) {
+          const names = items.map((x) => String(x.name || "").trim()).filter(Boolean);
+          if (names.length > 0) {
+            r1d.textContent = `Connect ${names.join(", ")} with one flow.`;
+          } else {
+            r1d.textContent = "No platforms are active right now. Admin can enable them anytime.";
+          }
+        }
+      } catch (_) {
+        // keep landing usable if API is offline
+      }
+    }
+
+    function startPlatformCatalogStream() {
+      if (!("EventSource" in window)) {
+        if (platformCatalogTimer) clearInterval(platformCatalogTimer);
+        platformCatalogTimer = setInterval(refreshPlatformCatalog, 5000);
+        return;
+      }
+      if (platformCatalogSource) {
+        try { platformCatalogSource.close(); } catch (_) {}
+      }
+      const apiBase = resolveApiBase();
+      platformCatalogSource = new EventSource(`${apiBase}/platforms/catalog/stream`);
+      platformCatalogSource.addEventListener("platform_catalog", () => {
+        refreshPlatformCatalog();
+      });
+      platformCatalogSource.onmessage = () => {
+        refreshPlatformCatalog();
+      };
+      platformCatalogSource.onerror = () => {
+        if (platformCatalogTimer) clearInterval(platformCatalogTimer);
+        platformCatalogTimer = setInterval(refreshPlatformCatalog, 5000);
+      };
+    }
+
+    function setTheme(next) {
+      theme = next;
+      document.body.classList.toggle("light", theme === "light");
+      themeBtn.innerHTML = theme === "light"
+        ? `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 2.8V5.2M12 18.8V21.2M21.2 12H18.8M5.2 12H2.8M18.4 5.6L16.7 7.3M7.3 16.7L5.6 18.4M18.4 18.4L16.7 16.7M7.3 7.3L5.6 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3A6.8 6.8 0 0 0 21 12.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>`;
+      localStorage.setItem("gigbit_web_theme", theme);
+    }
+
+    function setLang(next) {
+      lang = next;
+      const orderLabel = { en: "EN", hi: "हि", mr: "मर" };
+      langBtn.setAttribute("data-lang", orderLabel[lang] || "EN");
+      localStorage.setItem("gigbit_web_lang", lang);
+      const d = dict[lang] || dict.en;
+      Object.keys(d).forEach((k) => {
+        const el = document.getElementById(k);
+        if (!el) return;
+        if (k === "title") el.innerHTML = d[k];
+        else el.textContent = d[k];
+      });
+    }
+
+    langBtn.addEventListener("click", () => {
+      const order = ["en", "hi", "mr"];
+      setLang(order[(order.indexOf(lang) + 1) % order.length]);
+    });
+    themeBtn.addEventListener("click", () => setTheme(theme === "dark" ? "light" : "dark"));
+    if (adminBtn) {
+      adminBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        localStorage.setItem("gigbit_admin_gate_ts", String(Date.now()));
+        window.location.href = "admin.html";
+      });
+    }
+    infoClose.addEventListener("click", () => infoOverlay.classList.remove("show"));
+    infoOverlay.addEventListener("click", (e) => {
+      if (e.target === infoOverlay) infoOverlay.classList.remove("show");
+    });
+    document.querySelectorAll(".popup-trigger").forEach((el) => {
+      el.addEventListener("click", () => {
+        const panel = el.querySelector(".expand-panel");
+        if (!panel) return;
+        infoTitle.textContent = el.getAttribute("data-popup-title") || "Details";
+        infoBody.innerHTML = panel.innerHTML;
+        infoOverlay.classList.add("show");
+      });
+    });
+
+    setTheme(theme);
+    setLang(lang);
+    refreshPlatformCatalog();
+    hasValidAdminSession().then((ok) => {
+      if (ok) window.location.replace("admin.html");
+    });
+    window.addEventListener("storage", (e) => {
+      if (e.key === "gigbit_platform_catalog_version") {
+        refreshPlatformCatalog();
+      }
+    });
+    if (platformCatalogTimer) clearInterval(platformCatalogTimer);
+    startPlatformCatalogStream();
+  </script>
+</body>
+</html>
+
