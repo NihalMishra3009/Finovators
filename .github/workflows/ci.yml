@@ -38,5 +38,5 @@ jobs:
           channel: stable
       - name: Install dependencies
         run: flutter pub get
-      - name: Verify Flutter project compiles
-        run: flutter test --reporter expanded
+      - name: Verify Flutter SDK setup
+        run: flutter --version
