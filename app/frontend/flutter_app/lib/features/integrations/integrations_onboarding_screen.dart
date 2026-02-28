@@ -62,6 +62,7 @@ class _PlatformState {
 
 class _IntegrationsOnboardingScreenState
     extends State<IntegrationsOnboardingScreen> {
+  static const Duration _kCatalogRefreshInterval = Duration(seconds: 8);
   static const Map<String, String> _defaultPlatformAssets = {
     'zomato': 'assets/platforms/zomato.png',
     'blinkit': 'assets/platforms/blinkit.png',
@@ -105,6 +106,7 @@ class _IntegrationsOnboardingScreenState
 
   String? _error;
   StreamSubscription<void>? _catalogEventsSub;
+  Timer? _catalogPollTimer;
   String _lastCatalogSignature = '';
 
   String? _activePlan;
@@ -293,6 +295,7 @@ class _IntegrationsOnboardingScreenState
   @override
   void dispose() {
     _catalogEventsSub?.cancel();
+    _catalogPollTimer?.cancel();
     for (final p in _platforms) {
       p.phoneController.dispose();
       p.otpController.dispose();
@@ -308,6 +311,10 @@ class _IntegrationsOnboardingScreenState
       if (!mounted) return;
       _loadActivePlan();
     });
+    _catalogPollTimer = Timer.periodic(_kCatalogRefreshInterval, (_) {
+      if (!mounted) return;
+      _loadActivePlan();
+    });
   }
 
   int _randomOtp() => 100000 + Random().nextInt(900000);
@@ -315,11 +322,11 @@ class _IntegrationsOnboardingScreenState
   int _planPrice(String plan) {
     switch (plan) {
       case 'solo':
-        return 299;
+        return 25;
       case 'duo':
-        return 399;
+        return 50;
       case 'trio':
-        return 499;
+        return 75;
       case 'unity':
         return 229;
       default:

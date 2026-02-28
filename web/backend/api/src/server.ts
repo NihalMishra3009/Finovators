@@ -13,7 +13,18 @@ import type { AuthRequest } from "./types.js";
 type UserRow = { id: string; email: string; username: string | null; name: string; password_hash: string };
 
 const app = express();
-app.use(compression({ threshold: 1024 }));
+app.use(
+  compression({
+    threshold: 1024,
+    filter: (req, res) => {
+      const accept = String(req.headers.accept ?? "").toLowerCase();
+      if (accept.includes("text/event-stream") || req.path.endsWith("/stream")) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  }),
+);
 const registerVerifiedMemory = new Map<string, number>();
 const ADMIN_LOGIN_EMAIL = "gigbitaccess@gmail.com";
 const platformCatalogStreamClients = new Set<Response>();
@@ -181,9 +192,9 @@ function planIncrement(plan: string): number {
 
 function planAmount(plan: string): number {
   const p = plan.trim().toLowerCase();
-  if (p === "solo") return 299;
-  if (p === "duo") return 399;
-  if (p === "trio") return 499;
+  if (p === "solo") return 25;
+  if (p === "duo") return 50;
+  if (p === "trio") return 75;
   // Legacy support for previously purchased plans.
   if (p === "unity") return 229;
   return 0;
@@ -2372,7 +2383,7 @@ async function getSummary(userId: string): Promise<{
 }
 
 async function ensureMonthlyInsuranceAutoDebit(userId: string): Promise<void> {
-  const insuranceMonthlyCharge = 75;
+  const insuranceMonthlyCharge = 50;
   const u = await pgPool.query(
     "SELECT gigbit_insurance FROM users WHERE id = $1",
     [userId],
@@ -2393,12 +2404,12 @@ async function ensureMonthlyInsuranceAutoDebit(userId: string): Promise<void> {
   if (exists.rowCount) return;
 
   const w = await pgPool.query(
-    "INSERT INTO withdrawals (user_id,amount,insurance_contribution,service_fee,total_fee,user_receives,created_at) VALUES ($1,$2,$2,0,$2,0,$3) RETURNING id",
-    [userId, insuranceMonthlyCharge, monthStart],
+    "INSERT INTO withdrawals (user_id,amount,insurance_contribution,service_fee,total_fee,user_receives,created_at) VALUES ($1,$2,$2,0,$2,0,NOW()) RETURNING id",
+    [userId, insuranceMonthlyCharge],
   );
   await pgPool.query(
-    "INSERT INTO insurance_contributions (user_id,withdrawal_id,amount,created_at) VALUES ($1,$2,$3,$4)",
-    [userId, w.rows[0].id, insuranceMonthlyCharge, monthStart],
+    "INSERT INTO insurance_contributions (user_id,withdrawal_id,amount,created_at) VALUES ($1,$2,$3,NOW())",
+    [userId, w.rows[0].id, insuranceMonthlyCharge],
   );
   await safeRedisDel("dashboard:" + userId);
 }
@@ -2893,6 +2904,28 @@ app.get("/admin/activity-logs", requireAdminKey, async (req, res) => {
   res.json({ items: r.rows });
 });
 
+app.get("/admin/support-tickets", requireAdminKey, async (req, res) => {
+  const rawLimit = Number(req.query?.limit ?? 500);
+  const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(2000, Math.floor(rawLimit))) : 500;
+  const r = await pgPool.query(
+    `SELECT
+      s.id,
+      s.ticket_number,
+      s.user_id,
+      s.complaint,
+      s.created_at,
+      u.email,
+      COALESCE(NULLIF(u.name,''), u.full_name) AS full_name,
+      u.username
+     FROM support_tickets s
+     LEFT JOIN users u ON u.id = s.user_id
+     ORDER BY s.created_at DESC
+     LIMIT $1`,
+    [limit]
+  );
+  res.json({ items: r.rows });
+});
+
 app.get("/admin/withdrawals", requireAdminKey, async (_req, res) => {
   const [r, totals, claimsStats] = await Promise.all([
     pgPool.query(
@@ -2910,12 +2943,13 @@ app.get("/admin/withdrawals", requireAdminKey, async (_req, res) => {
         u.username
        FROM withdrawals w
        LEFT JOIN users u ON u.id = w.user_id
+       WHERE COALESCE(w.user_receives, 0) > 0
        ORDER BY w.created_at DESC
        LIMIT 1000`
     ),
     pgPool.query(
       `SELECT
-        COALESCE(SUM(amount),0) AS total_withdrawn,
+        COALESCE(SUM(COALESCE(user_receives, amount)),0) AS total_withdrawn,
         COALESCE(SUM(insurance_contribution),0) AS total_insurance,
         COALESCE(SUM(service_fee),0) AS total_fees,
         (SELECT COUNT(*)::int FROM users) AS total_users,
@@ -2965,20 +2999,15 @@ app.get("/admin/withdrawals", requireAdminKey, async (_req, res) => {
           FROM limits l
           WHERE l.active_window_count > 0 OR l.remaining_limit > 0
         ) AS total_active_users
-       FROM withdrawals`
+       FROM withdrawals
+       WHERE COALESCE(user_receives, 0) > 0`
     ),
     pgPool.query(
       `SELECT
         COUNT(*)::int AS approved_claims_count,
-        COALESCE((
-          SELECT SUM(w.insurance_contribution)
-          FROM withdrawals w
-          WHERE w.user_id IN (
-            SELECT DISTINCT c.user_id
-            FROM insurance_claims c
-            WHERE lower(c.status) = 'approved'
-          )
-        ), 0) AS claimed_insurance_amount`
+        COALESCE(SUM(claim_amount), 0) AS claimed_insurance_amount
+       FROM insurance_claims
+       WHERE lower(status) = 'approved'`
     ),
   ]);
   const totalsRow = totals.rows[0] ?? {};
@@ -2989,6 +3018,32 @@ app.get("/admin/withdrawals", requireAdminKey, async (_req, res) => {
       ...totalsRow,
       claimed_insurance_amount: Number((claimsRow as any).claimed_insurance_amount ?? 0),
       approved_claims_count: Number((claimsRow as any).approved_claims_count ?? 0),
+    },
+  });
+});
+
+app.get("/admin/insurance-contributions", requireAdminKey, async (_req, res) => {
+  const r = await pgPool.query(
+    `SELECT
+      ic.id,
+      ic.user_id,
+      ic.amount,
+     ic.created_at,
+     u.email,
+     COALESCE(NULLIF(u.name,''), u.full_name) AS full_name,
+     u.username
+     FROM insurance_contributions ic
+     LEFT JOIN users u ON u.id = ic.user_id
+     ORDER BY ic.created_at DESC`
+  );
+  const totals = await pgPool.query(
+    `SELECT COALESCE(SUM(amount),0) AS total_contributions
+     FROM insurance_contributions`
+  );
+  res.json({
+    items: r.rows,
+    totals: {
+      total_contributions: Number(totals.rows[0]?.total_contributions ?? 0),
     },
   });
 });
@@ -3035,10 +3090,10 @@ app.get("/admin/commission-share", requireAdminKey, async (req, res) => {
        SELECT
          ap.user_id,
          CASE
-           WHEN ap.plan = 'solo' THEN 5
-           WHEN ap.plan = 'duo' THEN 12
-           WHEN ap.plan = 'trio' THEN 18
-           WHEN ap.plan = 'unity' THEN 18
+           WHEN ap.plan = 'solo' THEN 10
+           WHEN ap.plan = 'duo' THEN 13
+           WHEN ap.plan = 'trio' THEN 15
+           WHEN ap.plan = 'unity' THEN 15
            ELSE 0
          END::int AS rate
        FROM user_month_plan ap
@@ -3091,7 +3146,22 @@ app.get("/admin/commission-share", requireAdminKey, async (req, res) => {
          CROSS JOIN month_bounds mb
          WHERE w.created_at >= mb.m_start
            AND w.created_at < mb.m_end
-       ),0)::int AS transaction_charge_total`,
+       ),0)::int AS transaction_charge_total,
+       COALESCE((
+         SELECT SUM(
+           CASE
+             WHEN lower(sp.plan) = 'solo' THEN 15
+             WHEN lower(sp.plan) = 'duo' THEN 24
+             WHEN lower(sp.plan) = 'trio' THEN 30
+             WHEN lower(sp.plan) = 'unity' THEN 30
+             ELSE 0
+           END
+         )
+         FROM subscription_purchases sp
+         CROSS JOIN month_bounds mb
+         WHERE sp.created_at >= mb.m_start
+           AND sp.created_at < mb.m_end
+       ),0)::int AS profit_total`,
     monthParams
   );
 
@@ -3123,7 +3193,7 @@ app.get("/admin/commission-share", requireAdminKey, async (req, res) => {
   const totalCommission = items.reduce((s, x) => s + Number(x.commission || 0), 0);
   const subscriptionAmountTotal = Number(totals.rows[0]?.subscription_amount_total ?? 0);
   const transactionChargeTotal = Number(totals.rows[0]?.transaction_charge_total ?? 0);
-  const profit = subscriptionAmountTotal - totalCommission - transactionChargeTotal;
+  const profit = Number(totals.rows[0]?.profit_total ?? 0);
 
   res.json({
     items,
@@ -3332,7 +3402,24 @@ async function ensureSchema(): Promise<void> {
   ];
 
   for (const sql of statements) {
-    await pgPool.query(sql);
+    try {
+      await pgPool.query(sql);
+    } catch (error: any) {
+      const code = String(error?.code ?? "");
+      const text = String(sql).trim().toUpperCase();
+      const isUniqueIndexStmt = text.startsWith("CREATE UNIQUE INDEX");
+      // Existing production data may violate late-added unique index rules.
+      // Do not crash startup for those cases; continue with degraded indexing.
+      if (isUniqueIndexStmt && code === "23505") {
+        console.warn("Skipping unique index creation due to duplicate existing data", {
+          code,
+          detail: error?.detail,
+          statement: sql,
+        });
+        continue;
+      }
+      throw error;
+    }
   }
 
   // Remove deprecated platforms completely.

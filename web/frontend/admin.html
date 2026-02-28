@@ -633,6 +633,76 @@
       gap: 10px;
       margin-bottom: 10px;
     }
+    .overview-graph {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,.04);
+      display: grid;
+      gap: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .graph-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      align-items: end;
+      justify-items: center;
+    }
+    .graph-col {
+      display: grid;
+      grid-template-rows: 1fr auto auto;
+      align-items: end;
+      justify-items: center;
+      gap: 6px;
+      height: 100%;
+      width: 100%;
+    }
+    .graph-track {
+      height: 128px;
+      width: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.08);
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+    }
+    .graph-bar {
+      width: 100%;
+      height: 0%;
+      transition: height 280ms ease;
+      background: linear-gradient(180deg, #2fd7a5, #2aa9ff);
+    }
+    .graph-value {
+      text-align: center;
+      color: var(--text);
+      font-weight: 900;
+      font-size: 12px;
+      min-height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    .graph-label {
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.25;
+      min-height: 34px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .complaints-card { margin-top: 0; }
     .commission-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -705,8 +775,7 @@
       gap: 3px;
       line-height: 1.35;
     }
-    #commissionProfit,
-    #commissionTransactionCharge {
+    #commissionProfit {
       font-size: 18px;
       font-weight: 900;
       line-height: 1.25;
@@ -727,6 +796,17 @@
       margin-top: 12px;
       align-items: stretch;
     }
+    .single-panel-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .gig-complaints-row {
+      margin-top: 12px;
+      align-items: stretch;
+    }
+    .gig-complaints-row > .panel { height: 100%; }
     .withdraw-row > .panel { height: 100%; }
     .withdraw-charge-panel .commission-card {
       min-height: 0;
@@ -734,13 +814,6 @@
       height: 100%;
     }
     #wdTitle { font-size: 21px; }
-    .stat {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px;
-      background: rgba(255,255,255,.04);
-    }
-    .stat .v { margin-top: 3px; font-size: 24px; font-weight: 900; }
     .platform-edit-modal { width: min(520px, 100%); }
 
     .overlay {
@@ -904,25 +977,42 @@
     @media (max-width: 560px) {
       .wrap { width: 100%; padding: 10px 8px 20px; }
       .top {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        flex-wrap: nowrap;
       }
       .right {
-        width: 100%;
-        justify-content: flex-start;
-        gap: 6px;
+        width: auto;
+        justify-content: flex-end;
+        gap: 4px;
+        flex-wrap: nowrap;
       }
       .toggle-shell {
         width: 100%;
         justify-content: space-between;
       }
       .brand {
-        font-size: 21px;
+        font-size: 16px;
+        gap: 6px;
+        min-width: 0;
+        white-space: nowrap;
       }
       .brand img {
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+      }
+      .icon-menu-btn,
+      .action-icon-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+      }
+      .icon-menu-btn svg,
+      .action-icon-btn svg {
+        transform: scale(.86);
       }
       .platform-grid { grid-template-columns: 1fr; }
       .commission-head-row {
@@ -965,10 +1055,13 @@
       }
     }
     @media (max-width: 760px) {
-      .stats { grid-template-columns: 1fr 1fr; }
+      .withdraw-row { grid-template-columns: 1fr; }
       .commission-grid { grid-template-columns: 1fr; }
       .panel { padding: 10px; }
       .section-title { font-size: 18px; }
+      .graph-grid { gap: 8px; }
+      .graph-track { height: 108px; width: 28px; }
+      .graph-value, .graph-label { font-size: 11px; }
       .approval-row,
       .approval-list-insurance .approval-row {
         font-size: 11px;
@@ -994,10 +1087,8 @@
       .section-title {
         font-size: 17px;
       }
-      .stats { grid-template-columns: 1fr; }
-      .stat .v {
-        font-size: 20px;
-      }
+      .graph-grid { gap: 6px; }
+      .graph-track { height: 96px; width: 24px; }
       .btn.small {
         font-size: 11px;
         padding: 5px 7px;
@@ -1067,14 +1158,23 @@
     </header>
 
     <main id="portalView">
-      <section class="panel">
-        <h2 class="section-title" id="portalTitle">Admin Operations Overview</h2>
-        <p class="lead" id="portalDesc">Monitor approvals, configure platform availability, and review financial summaries in real time.</p>
-        <div class="stats">
-          <div class="stat"><div class="muted" id="tW1">Total Withdrawn</div><div class="v" id="totWithdrawn">Rs 0</div></div>
-          <div class="stat"><div class="muted" id="tW2">Total Registered Users</div><div class="v" id="totUsers">0</div></div>
-          <div class="stat"><div class="muted" id="tW4">Active Users</div><div class="v" id="totActiveUsers">0</div></div>
-          <div class="stat"><div class="muted" id="tW3">Total Loan Amount Claimed</div><div class="v" id="totLoans">Rs 0</div></div>
+      <section class="withdraw-row">
+        <div class="panel">
+          <h2 class="section-title" id="portalTitle">Admin Operations Overview</h2>
+          <p class="lead" id="portalDesc">Monitor approvals, configure platform availability, and review financial summaries in real time.</p>
+          <div class="overview-graph" id="overviewGraph"></div>
+        </div>
+        <div class="panel" id="withdrawHistoryPanel">
+          <div class="commission-head-row" style="margin-bottom:8px;">
+            <h3 class="section-title" id="wdTitle" style="margin:0;">Withdrawals History</h3>
+            <button class="expand-btn" id="toggleWithdrawHistoryBtn" type="button" data-tip="Show all">▼</button>
+          </div>
+          <div style="overflow:auto;">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Amount</th><th>Date</th></tr></thead>
+              <tbody id="withdrawTable"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -1096,35 +1196,33 @@
       </section>
 
       <section class="commission-grid" style="margin-top:12px;">
-        <div class="panel">
+        <div class="panel" id="insuranceContribPanel">
           <div class="commission-head-row">
-            <div class="commission-head">Transaction charge</div>
-            <select id="commissionMonth2" class="commission-month"></select>
-          </div>
-          <div class="commission-body" id="commissionTransactionCharge">Rs 0</div>
-        </div>
-        <div class="panel">
-          <div class="commission-head-row">
-            <div class="commission-head">Profit</div>
-            <select id="commissionMonth3" class="commission-month"></select>
-          </div>
-          <div class="commission-body" id="commissionProfit">Rs 0</div>
-        </div>
-      </section>
-
-      <section class="withdraw-row">
-        <div class="panel" id="withdrawHistoryPanel">
-          <div class="commission-head-row" style="margin-bottom:8px;">
-            <h3 class="section-title" id="wdTitle" style="margin:0;">Withdrawals History</h3>
-            <button class="expand-btn" id="toggleWithdrawHistoryBtn" type="button" data-tip="Show all">▼</button>
+            <div class="commission-head">Insurance Contributions</div>
+            <button class="expand-btn" id="toggleInsuranceContribHistoryBtn" type="button" data-tip="Show all">▼</button>
           </div>
           <div style="overflow:auto;">
             <table>
-              <thead><tr><th>Name</th><th>Email</th><th>Amount</th><th>Date</th></tr></thead>
-              <tbody id="withdrawTable"></tbody>
+              <thead><tr><th>Name</th><th>Amount</th><th>Date</th><th>Time</th></tr></thead>
+              <tbody id="insuranceContribTable"></tbody>
             </table>
           </div>
         </div>
+        <div class="panel complaints-card" id="complaintsPanel">
+          <div class="commission-head-row" style="margin-bottom:8px;">
+            <h3 class="section-title" style="margin:0;">Raised Complaints</h3>
+            <button class="expand-btn" id="toggleComplaintsHistoryBtn" type="button" data-tip="Show all">▼</button>
+          </div>
+          <div style="overflow:auto;">
+            <table>
+              <thead><tr><th>Name</th><th>Ticket ID</th><th>Description</th></tr></thead>
+              <tbody id="complaintsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid g2 gig-complaints-row">
         <div class="panel withdraw-charge-panel" id="gigHistoryPanel">
           <div class="commission-card">
             <div class="commission-head-row">
@@ -1135,6 +1233,12 @@
               </div>
             </div>
             <div class="commission-body" id="commissionGigPlatform">No data</div>
+          </div>
+        </div>
+        <div class="panel pool-card">
+          <div class="pool-split">
+            <div class="pool-label">Shared Insurance Pool</div>
+            <div class="pool-value" id="sharedPool">Rs 0</div>
           </div>
         </div>
       </section>
@@ -1154,15 +1258,12 @@
             </div>
             <div id="pfMsg" class="muted" style="margin-top:8px;"></div>
           </div>
-          <div class="panel pool-card">
-            <div class="pool-split">
-              <div class="pool-label">Shared Insurance Pool</div>
-              <div class="pool-value" id="sharedPool">Rs 0</div>
+          <div class="panel">
+            <div class="commission-head-row">
+              <div class="commission-head">Profit</div>
+              <select id="commissionMonth3" class="commission-month"></select>
             </div>
-            <div class="pool-split">
-              <div class="pool-label">Claimed Insurance Amount</div>
-              <div class="pool-value" id="claimedPoolValue">No Claims Till Now</div>
-            </div>
+            <div class="commission-body" id="commissionProfit">Rs 0</div>
           </div>
           <div class="panel" id="deleteReqPanel">
             <div class="commission-head-row" style="margin-bottom:8px;">
@@ -1307,12 +1408,23 @@
       withdrawHistoryExpanded: false,
       loanHistoryExpanded: false,
       insuranceHistoryExpanded: false,
+      complaintsHistoryExpanded: false,
       deleteReqHistoryExpanded: false,
       commissionItems: [],
       withdrawRows: [],
       loanItems: [],
       claimItems: [],
-      deleteReqItems: []
+      complaintItems: [],
+      deleteReqItems: [],
+      insuranceContribExpanded: false,
+      insuranceContribRows: [],
+      overviewTotals: {
+        totalWithdrawn: 0,
+        totalUsers: 0,
+        totalActiveUsers: 0,
+        totalLoanAmount: 0,
+        claimedInsuranceAmount: 0,
+      }
     };
     let commissionRefreshTimer = null;
     let warmupInFlight = null;
@@ -1367,15 +1479,32 @@
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
+        timeZone: "Asia/Kolkata",
       });
     };
     const fmtDateOnly = (raw) => {
       const d = raw ? new Date(raw) : null;
       if (!d || Number.isNaN(d.getTime())) return "-";
-      const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const yyyy = String(d.getFullYear());
+      const parts = d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+      }).split("/");
+      const dd = parts[0] || "01";
+      const mm = parts[1] || "01";
+      const yyyy = parts[2] || "1970";
       return `${dd}/${mm}/${yyyy}`;
+    };
+    const fmtTime12 = (raw) => {
+      const d = raw ? new Date(raw) : null;
+      if (!d || Number.isNaN(d.getTime())) return "-";
+      return d.toLocaleString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
+      });
     };
     const safe = (v) => (v ?? "").toString();
     const hasFreshAdminGate = () => {
@@ -1580,10 +1709,20 @@
         i.textContent = state.insuranceHistoryExpanded ? "▲" : "▼";
         i.setAttribute("data-tip", state.insuranceHistoryExpanded ? "Show less" : "Show all");
       }
+      const c = $("toggleComplaintsHistoryBtn");
+      if (c) {
+        c.textContent = state.complaintsHistoryExpanded ? "▲" : "▼";
+        c.setAttribute("data-tip", state.complaintsHistoryExpanded ? "Show less" : "Show all");
+      }
       const d = $("toggleDeleteReqHistoryBtn");
       if (d) {
         d.textContent = state.deleteReqHistoryExpanded ? "▲" : "▼";
         d.setAttribute("data-tip", state.deleteReqHistoryExpanded ? "Show less" : "Show all");
+      }
+      const ic = $("toggleInsuranceContribHistoryBtn");
+      if (ic) {
+        ic.textContent = state.insuranceContribExpanded ? "▲" : "▼";
+        ic.setAttribute("data-tip", state.insuranceContribExpanded ? "Show less" : "Show all");
       }
     }
 
@@ -2049,12 +2188,38 @@
       return `<span class="pill ${cls}">${label}</span>`;
     }
 
+    function renderOverviewGraph() {
+      const el = $("overviewGraph");
+      if (!el) return;
+      const t = state.overviewTotals || {};
+      const rows = [
+        { label: "Total Withdrawn", value: Number(t.totalWithdrawn || 0), display: fmtRs(t.totalWithdrawn || 0) },
+        { label: "Total Registered Users", value: Number(t.totalUsers || 0), display: fmtCount(t.totalUsers || 0) },
+        { label: "Active Users", value: Number(t.totalActiveUsers || 0), display: fmtCount(t.totalActiveUsers || 0) },
+        { label: "Total Loan Amount Claimed", value: Number(t.totalLoanAmount || 0), display: fmtRs(t.totalLoanAmount || 0) },
+        { label: "Claimed Insurance Amount", value: Number(t.claimedInsuranceAmount || 0), display: fmtRs(t.claimedInsuranceAmount || 0) },
+      ];
+      const maxVal = Math.max(1, ...rows.map((r) => r.value));
+      const cols = rows.map((r) => {
+        const height = Math.max(2, Math.round((r.value / maxVal) * 100));
+        return `
+          <div class="graph-col">
+            <div class="graph-track"><div class="graph-bar" style="height:${height}%"></div></div>
+            <div class="graph-value">${safe(r.display)}</div>
+            <div class="graph-label">${safe(r.label)}</div>
+          </div>
+        `;
+      }).join("");
+      el.innerHTML = `<div class="graph-grid">${cols}</div>`;
+    }
+
     async function loadLoans() {
       const out = await api("/admin/loans");
       const items = out.items || [];
       state.loanItems = items;
       const totalLoanAmount = items.reduce((sum, x) => sum + Number(x.amount || 0), 0);
-      $("totLoans").textContent = fmtRs(totalLoanAmount);
+      state.overviewTotals.totalLoanAmount = totalLoanAmount;
+      renderOverviewGraph();
       renderLoans();
     }
 
@@ -2157,13 +2322,13 @@
       const rows = out.items || [];
       state.withdrawRows = rows;
       const totals = out.totals || {};
-      $("totWithdrawn").textContent = fmtRs(totals.total_withdrawn);
-      $("totUsers").textContent = fmtCount(totals.total_users);
-      $("totActiveUsers").textContent = fmtCount(totals.total_active_users);
-      $("sharedPool").textContent = fmtRs(totals.total_insurance);
       const approvedClaims = Number(totals.approved_claims_count ?? 0);
       const claimedAmt = Number(totals.claimed_insurance_amount ?? 0);
-      $("claimedPoolValue").textContent = approvedClaims > 0 ? fmtRs(claimedAmt) : "No Claims Till Now";
+      state.overviewTotals.totalWithdrawn = Number(totals.total_withdrawn || 0);
+      state.overviewTotals.totalUsers = Number(totals.total_users || 0);
+      state.overviewTotals.totalActiveUsers = Number(totals.total_active_users || 0);
+      state.overviewTotals.claimedInsuranceAmount = approvedClaims > 0 ? claimedAmt : 0;
+      renderOverviewGraph();
       renderWithdrawTable();
     }
 
@@ -2188,8 +2353,6 @@
       syncCommissionMonthSelects(availableMonths, state.commissionMonth);
       state.commissionItems = out.items || [];
       renderCommissionGigPlatform();
-      const txCharge = Number(out.transactionChargeTotal || 0);
-      $("commissionTransactionCharge").textContent = fmtRs(txCharge);
       $("commissionProfit").textContent = fmtRs(Number(out.profit || 0));
     }
 
@@ -2199,6 +2362,46 @@
       $("commissionGigPlatform").innerHTML = limited.length
         ? limited.map((x) => `<div class="commission-platform-line">${prettyPlatform(safe(x.platform))} : ${fmtRs(x.commission)} | ${Number(x.usersCount || 0)} Users | Start Date : ${fmtDateOnly(x.startDate)}</div>`).join("")
         : "No active plan/platform commission";
+      syncExpandButtons();
+    }
+
+    async function loadComplaints() {
+      const out = await api("/admin/support-tickets");
+      state.complaintItems = out.items || [];
+      renderComplaints();
+    }
+
+    function renderComplaints() {
+      const rows = Array.isArray(state.complaintItems) ? state.complaintItems : [];
+      const limited = state.complaintsHistoryExpanded ? rows : rows.slice(0, HISTORY_PREVIEW_COUNT);
+      $("complaintsTable").innerHTML = limited.length
+        ? limited.map((x) => `
+          <tr>
+            <td>${safe(x.full_name || x.username || x.email || x.user_id)}</td>
+            <td>${safe(x.ticket_number || "-")}</td>
+            <td>${safe(x.complaint || "-")}</td>
+          </tr>`).join("")
+        : `<tr><td colspan="3" class="muted">No complaints</td></tr>`;
+      syncExpandButtons();
+    }
+
+    async function loadInsuranceContributions() {
+      const out = await api("/admin/insurance-contributions");
+      state.insuranceContribRows = out.items || [];
+      $("sharedPool").textContent = fmtRs(Number(out?.totals?.total_contributions || 0));
+      renderInsuranceContributions();
+    }
+
+    function renderInsuranceContributions() {
+      const rows = Array.isArray(state.insuranceContribRows) ? state.insuranceContribRows : [];
+      const limited = state.insuranceContribExpanded ? rows : rows.slice(0, HISTORY_PREVIEW_COUNT);
+      $("insuranceContribTable").innerHTML = limited.map((x) => `
+        <tr>
+          <td>${safe(x.full_name || x.username || x.email || x.user_id)}</td>
+          <td>${fmtRs(x.amount)}</td>
+          <td>${fmtDateOnly(x.created_at)}</td>
+          <td>${fmtTime12(x.created_at)}</td>
+        </tr>`).join("");
       syncExpandButtons();
     }
 
@@ -2322,7 +2525,7 @@
     }
 
     function syncCommissionMonthSelects(months, selected) {
-      const ids = ["commissionMonth1", "commissionMonth2", "commissionMonth3"];
+      const ids = ["commissionMonth1", "commissionMonth3"];
       ids.forEach((id) => {
         const el = $(id);
         if (!el) return;
@@ -2338,7 +2541,6 @@
       syncCommissionMonthSelects(
         Array.from(new Set([
           ...Array.from($("commissionMonth1")?.options || []).map((o) => o.value),
-          ...Array.from($("commissionMonth2")?.options || []).map((o) => o.value),
           ...Array.from($("commissionMonth3")?.options || []).map((o) => o.value),
         ])),
         next
@@ -2357,6 +2559,8 @@
           loadCommissionShare().catch(() => {}),
           loadAdminActivityNotifications().catch(() => {}),
           loadWithdrawals().catch(() => {}),
+          loadComplaints().catch(() => {}),
+          loadInsuranceContributions().catch(() => {}),
           loadDeleteRequests().catch(() => {}),
           loadLoans().catch(() => {}),
           loadClaims().catch(() => {}),
@@ -2498,8 +2702,10 @@
       await Promise.all([
         loadLoans(),
         loadClaims(),
+        loadComplaints(),
         loadWithdrawals(),
         loadCommissionShare(),
+        loadInsuranceContributions(),
         loadDeleteRequests(),
         loadPlatforms(),
         loadAdminActivityNotifications(),
@@ -2548,7 +2754,6 @@
     });
     $("themeBtn").addEventListener("click", () => setTheme(state.theme === "dark" ? "light" : "dark"));
     $("commissionMonth1").addEventListener("change", (e) => onCommissionMonthChanged(e.target.value));
-    $("commissionMonth2").addEventListener("change", (e) => onCommissionMonthChanged(e.target.value));
     $("commissionMonth3").addEventListener("change", (e) => onCommissionMonthChanged(e.target.value));
     $("toggleGigHistoryBtn").addEventListener("click", () => {
       const nextGig = !state.gigPlatformExpanded;
@@ -2566,8 +2771,14 @@
     $("toggleInsuranceHistoryBtn").addEventListener("click", () => {
       animateSingleSectionToggle("insurancePanel", "claimList", "insuranceHistoryExpanded", renderClaims);
     });
+    $("toggleComplaintsHistoryBtn").addEventListener("click", () => {
+      animateSingleSectionToggle("complaintsPanel", "complaintsTable", "complaintsHistoryExpanded", renderComplaints);
+    });
     $("toggleDeleteReqHistoryBtn").addEventListener("click", () => {
       animateSingleSectionToggle("deleteReqPanel", "deleteReqList", "deleteReqHistoryExpanded", renderDeleteRequests);
+    });
+    $("toggleInsuranceContribHistoryBtn").addEventListener("click", () => {
+      animateSingleSectionToggle("insuranceContribPanel", "insuranceContribTable", "insuranceContribExpanded", renderInsuranceContributions);
     });
     $("notifDayFilter").addEventListener("change", renderNotifications);
     $("notifMonthFilter").addEventListener("change", renderNotifications);
@@ -2587,6 +2798,8 @@
           loadCommissionShare().catch(() => {}),
           loadAdminActivityNotifications().catch(() => {}),
           loadWithdrawals().catch(() => {}),
+          loadComplaints().catch(() => {}),
+          loadInsuranceContributions().catch(() => {}),
           loadDeleteRequests().catch(() => {}),
           loadLoans().catch(() => {}),
           loadClaims().catch(() => {}),
@@ -2611,6 +2824,7 @@
 
     setTheme(state.theme);
     setLang(state.lang);
+    renderOverviewGraph();
     warmApi();
     syncThemeTooltips(document);
     syncExpandButtons();

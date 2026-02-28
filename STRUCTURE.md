@@ -1,25 +1,18 @@
-﻿# GigBit Repository Structure
+# GigBit Repository Structure
 
-This repository is split into `app` and `web` modules with dedicated documentation folders in each.
+This repository uses a split structure for web and app, with separate frontend/backend/database folders for both.
 
 ## Top-level layout
 
 ```text
 app/
-  README.md
   frontend/
     flutter_app/
   backend/
   database/
     schema.sql
-  releases/
-  docs/
-    docx/
-    ppt/
-    screenshots/
 
 web/
-  README.md
   frontend/
     index.html
     landing.html
@@ -28,14 +21,48 @@ web/
     api/
   database/
     schema.sql
-  docs/
-    docx/
-    ppt/
-    screenshots/
 ```
 
-## Operational References
+## Folder contract
 
-- API runtime: `web/backend/api`
-- Docker schema init: `web/database/schema.sql`
-- Android app path: `app/frontend/flutter_app`
+- `web/frontend/`
+  - Static website/admin portal files only.
+  - Do not place backend code here.
+
+- `web/backend/api/`
+  - Node.js + TypeScript API used by both web and app.
+  - Primary backend runtime location.
+
+- `web/database/`
+  - Web-side database schema source used by Docker compose init.
+
+- `app/frontend/flutter_app/`
+  - Flutter mobile app.
+
+- `app/backend/`
+  - Reserved app backend folder (kept separate by structure requirement).
+  - Current runtime backend is shared in `web/backend/api/`.
+
+- `app/database/`
+  - App-side schema copy.
+
+## Operational references
+
+- Root workspace API scripts target:
+  - `web/backend/api`
+
+- Docker compose uses:
+  - API context: `web/backend/api`
+  - Schema init: `web/database/schema.sql`
+
+- Android run scripts use:
+  - `app/frontend/flutter_app`
+
+## Notes
+
+- Keep path updates consistent when moving files.
+- Prefer updating references in:
+  - `package.json`
+  - `docker-compose.yml`
+  - `scripts/*.cmd`, `scripts/*.ps1`
+  - `web/frontend/*.html`

@@ -81,6 +81,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const _kDashboardCacheKey = 'dashboard_cache_v1';
   static const Duration _kTabSlideDuration = Duration(milliseconds: 420);
   static const Duration _kAutoPlatformSyncInterval = Duration(hours: 6);
+  static const Duration _kPlatformCatalogRefreshInterval =
+      Duration(seconds: 8);
   static const Map<String, String> _defaultPlatformAssets = {
     'zomato': 'assets/platforms/zomato.png',
     'blinkit': 'assets/platforms/blinkit.png',
@@ -176,6 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   StreamSubscription<void>? _platformCatalogEventsSub;
   StreamSubscription<Map<String, dynamic>>? _approvalUpdatesSub;
   Timer? _autoPlatformSyncTimer;
+  Timer? _platformCatalogPollTimer;
   bool _autoPlatformSyncInFlight = false;
   String _lastCatalogSignature = '';
 
@@ -536,6 +539,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _load(showLoader: false);
     _loadTaxChats();
     _platformCatalogEventsSub = _api.platformCatalogEvents().listen((_) {
+      if (!mounted) return;
+      _refreshPlatformCatalogOnly();
+    });
+    _platformCatalogPollTimer =
+        Timer.periodic(_kPlatformCatalogRefreshInterval, (_) {
       if (!mounted) return;
       _refreshPlatformCatalogOnly();
     });
@@ -1578,6 +1586,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _platformCatalogEventsSub?.cancel();
     _approvalUpdatesSub?.cancel();
     _autoPlatformSyncTimer?.cancel();
+    _platformCatalogPollTimer?.cancel();
     super.dispose();
   }
 
@@ -3231,11 +3240,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _planPrice(String plan) {
     switch (plan) {
       case 'solo':
-        return 299;
+        return 25;
       case 'duo':
-        return 399;
+        return 50;
       case 'trio':
-        return 499;
+        return 75;
       case 'unity':
         return 229;
       default:

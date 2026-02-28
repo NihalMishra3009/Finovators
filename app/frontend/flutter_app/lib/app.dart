@@ -74,7 +74,12 @@ class _GigBitAppState extends State<GigBitApp> {
       setRuntimeApiBaseUrl(defined);
     } else {
       // 2) Load persisted base URL, but sanitize it (reject stale LAN IPs).
-      setRuntimeApiBaseUrl(prefs.getString(kApiBaseUrlPrefKey));
+      final persisted = prefs.getString(kApiBaseUrlPrefKey);
+      final migrated = sanitizeApiBaseUrl(migrateLegacyApiBaseUrl(persisted));
+      setRuntimeApiBaseUrl(migrated);
+      if (migrated != null && migrated != persisted) {
+        await prefs.setString(kApiBaseUrlPrefKey, migrated);
+      }
     }
 
     // If we have a build-time API base URL, do not auto-switch away from it.

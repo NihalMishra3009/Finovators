@@ -18,7 +18,7 @@ class AppStrings {
       'get_gigbit_insurance': 'Get GigBit Insurance',
       'insurance_opt_in_title': 'Enable GigBit Insurance?',
       'insurance_opt_in_body':
-          'GigBit Insurance charges Rs 75 every month. It will be auto-deducted on the 1st day of each month, and insurance benefits will be enabled.',
+          'GigBit Insurance charges Rs 50 every month. It will be auto-deducted on the 1st day of each month, and insurance benefits will be enabled.',
       'yes': 'Yes',
       'no': 'No',
       'logout': 'Logout',
@@ -206,7 +206,7 @@ class AppStrings {
       'get_gigbit_insurance': 'GigBit बीमा लें',
       'insurance_opt_in_title': 'GigBit बीमा चालू करें?',
       'insurance_opt_in_body':
-          'GigBit बीमा में हर महीने Rs 75 शुल्क लगेगा। यह हर महीने की 1 तारीख को अपने आप कटेगा और बीमा फीचर्स चालू हो जाएंगे।',
+          'GigBit बीमा में हर महीने Rs 50 शुल्क लगेगा। यह हर महीने की 1 तारीख को अपने आप कटेगा और बीमा फीचर्स चालू हो जाएंगे।',
       'yes': 'हाँ',
       'no': 'नहीं',
       'logout': 'लॉगआउट',
@@ -393,7 +393,7 @@ class AppStrings {
       'get_gigbit_insurance': 'GigBit विमा घ्या',
       'insurance_opt_in_title': 'GigBit विमा सुरू करायचा?',
       'insurance_opt_in_body':
-          'GigBit विम्यासाठी दर महिन्याला Rs 75 शुल्क आकारले जाईल. हे प्रत्येक महिन्याच्या 1 तारखेला आपोआप वजा होईल आणि विमा फीचर्स सुरू होतील.',
+          'GigBit विम्यासाठी दर महिन्याला Rs 50 शुल्क आकारले जाईल. हे प्रत्येक महिन्याच्या 1 तारखेला आपोआप वजा होईल आणि विमा फीचर्स सुरू होतील.',
       'yes': 'हो',
       'no': 'नाही',
       'logout': 'लॉगआउट',
