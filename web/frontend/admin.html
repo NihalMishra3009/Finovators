@@ -2217,7 +2217,11 @@
       const out = await api("/admin/loans");
       const items = out.items || [];
       state.loanItems = items;
-      const totalLoanAmount = items.reduce((sum, x) => sum + Number(x.amount || 0), 0);
+      const totalLoanAmount = items.reduce((sum, x) => {
+        const status = String(x?.status || "").toLowerCase();
+        if (status !== "approved") return sum;
+        return sum + Number(x.amount || 0);
+      }, 0);
       state.overviewTotals.totalLoanAmount = totalLoanAmount;
       renderOverviewGraph();
       renderLoans();
