@@ -1,4 +1,4 @@
-﻿# Deploy Now (Railway + Supabase + Vercel)
+# Deploy Now (Railway + Supabase + Cloudflare)
 
 This is the fastest production path for GigBit now.
 
@@ -64,7 +64,7 @@ git push
 6. Confirm API:
 - `https://YOUR-RAILWAY-API-DOMAIN/health` returns `status: ok`
 
-## D) Vercel (Web)
+## D) Cloudflare Pages (Web)
 
 1. Create project from GitHub repo.
 2. Build settings:

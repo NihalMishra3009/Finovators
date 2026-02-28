@@ -1,10 +1,10 @@
-﻿# GigBit â€” Gig Worker Payment & Benefits Platform
+# GigBit — Gig Worker Payment & Benefits Platform
 
 Stop juggling fragmented tools for gig workers. Run one connected platform for payouts, protection, and approvals.
 
 GigBit is a full-stack fintech platform for gig workers with a Flutter mobile app, web landing/admin portals, and a shared Node.js API backend.
 
-Earn â†’ Sync â†’ Withdraw â†’ Claim â†’ Manage.
+Earn → Sync → Withdraw → Claim → Manage.
 
 ---
 
@@ -255,7 +255,7 @@ Recommended deployment setup used in this project:
 
 - Backend/API: Railway  
 - Database: Supabase Postgres  
-- Web frontend: Vercel  
+- Web frontend: Cloudflare Pages  
 - App distribution: APK artifact download from web
 
 Use deployment docs in repository root:

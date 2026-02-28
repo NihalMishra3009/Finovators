@@ -1,8 +1,8 @@
-﻿# Deployment Plan (Railway + Supabase + Vercel)
+# Deployment Plan (Railway + Supabase + Cloudflare)
 
 This setup uses:
 
-- Web frontend/admin: Vercel
+- Web frontend/admin: Cloudflare Pages
 - Backend/API: Railway
 - Database: Supabase Postgres
 - Cache: Railway Redis
@@ -38,10 +38,10 @@ This setup uses:
 5. Verify API:
 - `https://<your-railway-domain>/health`
 
-## 3) Deploy Web Frontend (Vercel)
+## 3) Deploy Web Frontend (Cloudflare Pages)
 
 1. Push repo to GitHub.
-2. Create Vercel project.
+2. Create Cloudflare Pages project.
 3. Build settings:
 - Build command: empty
 - Output directory: `web/frontend`
